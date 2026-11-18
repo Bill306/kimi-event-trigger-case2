@@ -126,7 +126,7 @@ const root = await navigator.storage.getDirectory();
 try { await root.removeEntry("会议录音", { recursive: true }); } catch {}
 const meetDir = await root.getDirectoryHandle("会议录音", { create: true });
 try { localStorage.removeItem("kimi-demo-seen"); } catch {}
-$("#app").src = "index.html?opfs&embed";
+$("#app").src = "index.html?opfs&embed" + (QS.get("view") === "pm" ? "&view=pm" : "");   // 默认用户版；desktop.html?view=pm 看 PM 版
 
 setInterval(() => { $("#clock").textContent = new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }); }, 1000);
 

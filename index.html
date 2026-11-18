@@ -175,7 +175,13 @@ th, td:first-child, td:last-child { white-space: nowrap; }
 /* 设计说明 */
 .pmnote { border-left: 3px solid var(--note); background: var(--note-soft); border-radius: 0 10px 10px 0; padding: 7px 12px; font-size: 13px; color: var(--ink); }
 .pmnote b { color: var(--note); font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; display: block; }
-body.notes-off .pmnote { display: none; }
+.pmnote.t { border-left-color: var(--ok); background: var(--ok-soft); } .pmnote.t b { color: var(--ok); }
+body:not(.pm) .pm-only, body:not(.pm) .pmnote { display: none !important; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); padding: 2px; }
+.seg button { border: 0; background: none; border-radius: 999px; padding: 2px 12px; font-size: 13px; color: var(--muted); }
+.seg button.on { background: var(--ink); color: var(--bg); }
+.steps .how { grid-column: 2 / -1; color: var(--muted); font-size: 12px; padding-bottom: 4px; }
+.viewhint { font-size: 13px; color: var(--muted); }
 
 /* 侧栏 */
 .coach { border: 1.5px solid var(--accent); }
@@ -225,8 +231,8 @@ body.embed .hero { padding-top: 14px; } body.embed .stepper { margin-top: 0; }
 <div class="top"><div class="wrap topin">
   <div class="brand"><span class="logo">K</span>Kimi 事件触发<span class="tagline">Case 2 · 可运行 Demo</span></div>
   <div class="topact">
-    <button class="chip" id="engineChip" data-act="settings"></button>
-    <button class="chip" id="notesBtn" data-act="notes" aria-pressed="true">设计说明：开</button>
+    <button class="chip pm-only" id="engineChip" data-act="settings"></button>
+    <div class="seg" role="group" aria-label="切换版本"><button data-act="view" data-v="user">用户版</button><button data-act="view" data-v="pm">PM 版</button></div>
     <a href="desktop.html">虚拟桌面</a>
     <a href="demo.mp4">演示视频</a>
     <a href="overview.html">方案说明页</a>
@@ -238,6 +244,7 @@ body.embed .hero { padding-top: 14px; } body.embed .stepper { margin-top: 0; }
   <h1>说一句话，<br>之后每段会议录音都<em>自动变成纪要</em>。</h1>
   <p class="lede">不用每次打开对话、上传文件、再打一遍提示词。告诉 Kimi 一次，以后录音一存进文件夹，纪要和待办就送到你手上。这个页面是能真正跑起来的原型。</p>
   <ul class="facts"><li>真实的文件写入触发，没有“模拟运行”按钮</li><li>录音在你的电脑上转写</li><li>只往 <span class="mono">Kimi纪要/</span> 子目录写结果</li></ul>
+  <div class="viewhint" id="viewHint"></div>
   <div id="support" class="notice hidden"></div>
   <ol class="stepper" id="stepper">
     <li><div><b>说出你要的自动化</b><span>一句自然语言</span></div></li>
@@ -286,7 +293,7 @@ body.embed .hero { padding-top: 14px; } body.embed .stepper { margin-top: 0; }
       </div>
     </section>
 
-    <section class="panel">
+    <section class="panel pm-only">
       <div class="eyebrow">出错的时候会怎样</div>
       <h2>边界情况 <span class="small" id="checkCount"></span></h2>
       <div class="meter"><i id="checkBar"></i></div>
@@ -295,7 +302,7 @@ body.embed .hero { padding-top: 14px; } body.embed .stepper { margin-top: 0; }
   </aside>
 </div>
 
-<details class="panel devlog">
+<details class="panel devlog pm-only">
   <summary>幕后日志（开发者视图）</summary>
   <div class="log" id="log"></div>
   <div><button class="chip" data-act="clearSeen">清空去重记录</button></div>
@@ -645,6 +652,26 @@ const checks = {
   failure: { title: "模型服务出故障", expect: "自动重试，最多 3 次；仍失败就保留进度并通知你", ev: null, acts: [["fail2", "失败 2 次后恢复"], ["fail3", "连续失败 3 次"]] },
 };
 const note = t => `<aside class="pmnote"><b>设计说明</b>${t}</aside>`;
+const tech = t => `<aside class="pmnote t"><b>背后的技术</b>${t}</aside>`;
+const TECH = {
+  detect: "FileSystemObserver 推送目录变化，1 秒轮询兜底；只看顶层文件，忽略 .crswap / .part / .tmp 等临时文件。桌面端对应 FSEvents（macOS）/ ReadDirectoryChangesW（Windows）。",
+  settle: "每秒读一次 size 和 lastModified，连续 N 秒（默认 2）不变才算写完；期间只要有变化就重新计时。",
+  type: "两层检查：扩展名白名单（m4a / mp3 / wav / webm / ogg / aac / txt），再读前 16 字节核对文件头（ftyp、RIFF/WAVE、ID3、EBML、OggS）。",
+  hash: "crypto.subtle 计算全文件 SHA-256，查本地已处理表（localStorage）；按内容而不是文件名判重。",
+  payload: "生成标准事件对象：event_id、type=file.created、source、automation_id、文件元数据（路径、大小、MIME、sha256）、detected_at / settled_at。",
+  transcribe: "AudioContext 解码并重采样到 16 kHz 单声道；在 18–28 秒之间找最安静的 100 ms 切段；Whisper base（q8 量化，约 77 MB）经 transformers.js 在 WASM 上本地推理；OpenCC 繁转简。",
+  context: "只拼三样：Saved Prompt（system）、事件摘要 + 本次转写（user）。不带聊天历史、其他文件、绝对路径；按字符数估算 tokens。",
+  agent: "有 Key：POST /chat/completions，response_format=json_object，解析 summary / decisions / action_items。无 Key：正则规则。最多 3 次，1s / 2s 指数退避，401 / 403 不重试。",
+  deliver: "写 Kimi纪要/<文件名>-纪要.md，追加一行 execution-log.jsonl（run_id、状态、重试记录），再发 Notification API 桌面通知。输出目录不在监听范围内，不会自触发。",
+};
+function setView(v, push = true) {
+  const pm = v === "pm";
+  document.body.classList.toggle("pm", pm);
+  document.querySelectorAll("[data-act=view]").forEach(b => { b.classList.toggle("on", b.dataset.v === v); b.setAttribute("aria-pressed", String(b.dataset.v === v)); });
+  $("#viewHint").textContent = pm ? "你在看 PM 版：每一步都标出了设计理由和背后的技术，右侧可以演练边界情况。" : "";
+  S.runs.forEach(renderRun); if (push) renderFlow();
+  if (push) { const u = new URL(location.href); pm ? u.searchParams.set("view", "pm") : u.searchParams.delete("view"); history.replaceState(null, "", u); }
+}
 
 /* ================= 日志与提示 ================= */
 function log(level, msg) {
@@ -698,7 +725,7 @@ function renderCard() {
     <div class="acard-top"><h3>${esc(a.name)}</h3><span class="badge ${state[1]}">${state[0]}</span></div>
     <dl>
       <dt>监听哪里</dt><dd>${where}</dd>
-      <dt>何时触发</dt><dd>${esc(a.trigger)}<div class="small">${a.file_types.join(" ")}</div></dd>
+      <dt>何时触发</dt><dd>${esc(a.trigger)}<div class="small pm-only">${a.file_types.join(" ")}</div></dd>
       <dt>做什么</dt><dd>${a.actions.map(esc).join(" → ")}</dd>
       <dt>权限</dt><dd><ul class="perm">
         <li>读取这个文件夹顶层的文件</li><li>只在 <code>${OUT_DIR}/</code> 子目录写入结果</li>
@@ -706,11 +733,12 @@ function renderCard() {
         <li class="no">${key() ? "录音不出本机，只把转写文字发给 Kimi" : "录音不出本机，在浏览器里转写"}</li></ul></dd>
       <dt>怎么告诉你</dt><dd>${a.delivery.map(esc).join(" + ")}</dd>
     </dl>
-    <details><summary>每次触发时交给模型的指令（Saved Prompt）</summary><pre>${esc(a.saved_prompt)}</pre></details>
+    <details class="pm-only"><summary>每次触发时交给模型的指令（Saved Prompt）</summary><pre>${esc(a.saved_prompt)}</pre></details>
     ${S.dir || S.fallback ? "" : `<div class="acard-foot"><button class="primary" data-act="enable">确认，并选择要监听的文件夹</button><button class="ghost" data-act="edit">改一下</button></div>`}
   </div>
-  <div class="small">${esc(S.cardBy)}</div>
-  ${note("自然语言有歧义，所以先把它翻译成一张可检查的卡片：触发条件、动作、权限、交付方式逐项列出，用户确认前不产生任何副作用。权限写成“能做 / 不做”两类，比一句“需要访问文件夹”更容易建立信任。")}`;
+  <div class="small pm-only">${esc(S.cardBy)}</div>
+  ${note("自然语言有歧义，所以先把它翻译成一张可检查的卡片：触发条件、动作、权限、交付方式逐项列出，用户确认前不产生任何副作用。权限写成“能做 / 不做”两类，比一句“需要访问文件夹”更容易建立信任。")}
+  ${tech("自然语言 → 结构化配置：有 Key 时调用 Kimi chat/completions（JSON 模式）抽取 name / folder / trigger / actions，无 Key 时用正则规则。卡片上的字段就是保存下来的自动化配置（automation_id、触发条件、Saved Prompt），之后每次触发都读它。")}`;
   const old = document.getElementById("cardMsg");
   if (old) old.querySelector(".bub").innerHTML = html; else say(html, { id: "cardMsg" });
 }
@@ -728,7 +756,7 @@ function renderFlow() {
   $("#composer").classList.toggle("hidden", st >= 3);
   const dirName = S.dir ? S.dir.name + "/" : "";
   $("#coachTitle").textContent = st === 4 ? "主流程跑通了" : S.fallback ? "把一段录音拖进来" : "往文件夹里存一段录音";
-  $("#coachText").textContent = st === 4 ? "可以再存一段自己的录音，或者试试下面几种容易出错的情况。"
+  $("#coachText").textContent = st === 4 ? (document.body.classList.contains("pm") ? "可以再存一段自己的录音，或者试试下面几种容易出错的情况。" : "之后每次有新录音，都会这样自动处理。可以再存一段自己的试试。")
     : S.fallback ? "当前浏览器不能监听本地文件夹，只能用拖拽代替。"
     : EMBED ? `在访达里把录音拖进「${dirName}」文件夹就行，之后什么都不用做。`
     : `在访达里把录音拖进「${dirName}」就行；手边没有录音，可以用下面的按钮代劳。`;
@@ -771,7 +799,8 @@ async function enable() {
   startWatching();
   const notif = EMBED || ("Notification" in window && Notification.permission === "granted");
   say(`<p>好了，我开始盯着 <code>${esc(dir.name)}/</code> 了。${n ? `里面原有的 ${n} 个文件我不会处理，` : ""}之后新存进来的录音，我会自动整理成纪要，放进 <code>${OUT_DIR}/</code>${notif ? "，并发桌面通知" : "（你没有允许桌面通知，我会在页面里提示）"}。</p><p>现在可以去忙别的了。想马上看效果，就往文件夹里存一段录音。</p>
-  ${note("开启时把已有文件记为基线、不回溯处理：用户说的是“出现新的录音时”，一开启就处理几十个历史文件会是一次意外的大动作。")}`);
+  ${note("开启时把已有文件记为基线、不回溯处理：用户说的是“出现新的录音时”，一开启就处理几十个历史文件会是一次意外的大动作。")}
+  ${tech("showDirectoryPicker 拿到这个文件夹的读写句柄，权限只限这一个目录；启动时遍历一次，记下每个文件的 size + lastModified 作为基线；之后由 FileSystemObserver 推送变化，1 秒轮询兜底。")}`);
 }
 function startWatching() {
   S.watching = true;
@@ -846,7 +875,7 @@ const ICON = { idle: "·", active: "▶", done: "✓", skip: "–", fail: "✕" 
 const STATE_BADGE = { waiting: ["等待写完", "live"], running: ["处理中", "live"], done: ["已送达", "ok"], failed: ["失败", "bad"], duplicate: ["重复 · 已跳过", "warn"], skipped: ["已跳过", "warn"] };
 
 function newRun(name, k) {
-  const run = { id: "run_" + uid(), name, state: k ? "waiting" : "running", startedAt: now(), stages: {}, log: [], attempts: [], tab: "payload", open: false, k };
+  const run = { id: "run_" + uid(), name, state: k ? "waiting" : "running", startedAt: now(), stages: {}, log: [], attempts: [], tab: "payload", open: null, k };
   for (const [key] of STAGES) run.stages[key] = { st: "idle", dt: "", ms: null };
   run.stages.detect = { st: "done", dt: k ? `Watcher 在 ${hms()} 发现` : "拖拽回退模式收到文件", ms: 0 };
   run.stages.settle = { st: k ? "active" : "done", dt: k ? "等待文件大小稳定" : "", ms: null, t0: performance.now() };
@@ -887,10 +916,10 @@ function minutesHtml(run) {
     <p>${esc(m.summary)}</p>
     <h4>关键决策</h4>${m.decisions.length ? "<ul>" + m.decisions.map(d => `<li>${esc(d)}</li>`).join("") + "</ul>" : `<p class="small">没有识别到明确的决策</p>`}
     <h4>待办事项</h4><table><thead><tr><th>负责人</th><th>事项</th><th>截止</th></tr></thead><tbody>${m.action_items.length ? m.action_items.map(a => `<tr><td>${esc(a.owner)}</td><td>${esc(a.task)}</td><td>${esc(a.due)}</td></tr>`).join("") : "<tr><td colspan=3>没有识别到待办</td></tr>"}</tbody></table>
-    <div class="m-foot"><span>${run.output ? `已保存到 <code>${esc(run.output)}</code>` : "未写入文件"} · ${esc(m.by)}</span><button data-act="dl" data-run="${run.id}">下载 .md</button></div>
+    <div class="m-foot"><span>${run.output ? `已保存到 <code>${esc(run.output)}</code>` : "未写入文件"}<span class="pm-only"> · ${esc(m.by)}</span></span><button data-act="dl" data-run="${run.id}">下载 .md</button></div>
   </div>
   ${offline ? `<div class="small">这份纪要由离线规则生成，只为演示整条链路，质量不代表大模型。<a href="#" data-act="settings">接入 Kimi</a> 后由模型生成。</div>` : ""}
-  <div class="metrics">
+  <div class="metrics pm-only">
     <div class="metric"><b>${secs}s</b><span>从文件落盘到纪要送达</span></div>
     <div class="metric"><b>0 次</b><span>你需要做的操作</span></div>
     <div class="metric"><b>≈${run.context.tokens}</b><span>交给模型的 tokens</span></div>
@@ -899,14 +928,14 @@ function minutesHtml(run) {
   ${note("结果卡片同时回答三个问题：结论是什么（纪要）、放在哪（文件路径）、凭什么信（生成方式、交给模型的内容可展开查看）。四个数字是这类自动化的核心指标：时延、人工步骤、成本、可靠性。")}`;
 }
 function techHtml(run) {
-  const steps = STAGES.map(([k, nm]) => { const s = run.stages[k]; return `<li class="${s.st}"><span class="ic">${ICON[s.st]}</span><span>${nm}</span><span class="dt">${esc(s.dt)}</span><span class="ms">${s.ms != null ? s.ms + "ms" : ""}</span></li>`; }).join("");
+  const steps = STAGES.map(([k, nm]) => { const s = run.stages[k]; return `<li class="${s.st}"><span class="ic">${ICON[s.st]}</span><span>${nm}</span><span class="dt">${esc(s.dt)}</span><span class="ms">${s.ms != null ? s.ms + "ms" : ""}</span><span class="how">${TECH[k]}</span></li>`; }).join("");
   const TABS = [["payload", "Event Payload"], ["context", "交给模型的内容"], ["transcript", "转写原文"], ["runlog", "日志"]];
   let body;
   if (run.tab === "payload") body = `<pre>${esc(run.payload ? JSON.stringify(run.payload, null, 2) : "还没有生成 Event Payload。")}</pre>`;
   else if (run.tab === "context") body = run.context ? `<div class="small" style="margin-top:8px">注入：${esc(run.context.included.join("、"))}<br>不注入：${esc(run.context.excluded.join("、"))}</div><pre>${esc(run.context.messages.map(m => `[${m.role}]\n${m.content}`).join("\n\n"))}</pre>` : `<pre>还没有组装 Context。</pre>`;
   else if (run.tab === "transcript") body = `<pre>${esc(run.transcript ?? "还没有转写结果。")}</pre>`;
   else body = `<pre>${esc(run.log.join("\n") + (run.attempts.length ? "\n\n重试记录：\n" + JSON.stringify(run.attempts, null, 2) : "") || "暂无")}</pre>`;
-  return `<details class="tech" ${run.open ? "open" : ""}><summary>查看 9 个步骤与技术细节</summary>
+  return `<details class="tech pm-only" ${(run.open ?? document.body.classList.contains("pm")) ? "open" : ""}><summary>9 个步骤与背后的技术</summary>
     <ol class="steps">${steps}</ol>
     <div class="tabs" role="tablist">${TABS.map(([k, t]) => `<button role="tab" class="${run.tab === k ? "on" : ""}" data-act="tab" data-run="${run.id}" data-t="${k}">${t}</button>`).join("")}</div>${body}</details>`;
 }
@@ -1090,7 +1119,7 @@ const ACT = {
   enable, settings: () => $("#settings").showModal(),
   edit: () => { $("#instr").value = S.automation?.instruction || ""; $("#instr").focus(); },
   chip: b => { $("#instr").value = b.dataset.text; $("#instr").focus(); },
-  notes: b => { const off = document.body.classList.toggle("notes-off"); b.textContent = "设计说明：" + (off ? "关" : "开"); b.setAttribute("aria-pressed", String(!off)); },
+  view: b => setView(b.dataset.v),
   pause: () => { if (S.watching) { stopWatching(); log("info", "已暂停监听"); renderCard(); renderFlow(); } else if (S.dir) { log("info", "继续监听"); startWatching(); } },
   resume: b => resume(S.runs.find(r => r.id === b.dataset.run)),
   tab: b => { const r = S.runs.find(r => r.id === b.dataset.run); if (r) { r.tab = b.dataset.t; r.open = true; renderRun(r); } },
@@ -1198,6 +1227,7 @@ if (!hasFS) {
   $("#support").textContent = "当前浏览器不支持监听本地文件夹（Safari、Firefox、手机浏览器都不支持）。要体验真实的文件触发，请用电脑上的 Chrome 或 Edge 打开；这里只能用拖拽代替。";
 }
 say(`<p>你好，我是 Kimi。你可以告诉我：<b>当什么事情发生时，自动帮你做什么</b>。说一次就行，以后我会一直照做。</p>`);
+setView(QS.get("view") === "pm" ? "pm" : "user", false);
 renderFlow();
 log("dim", `Demo 已加载。${hasFS ? (hasObserver ? "支持 FileSystemObserver。" : "用 1 秒轮询检测文件变化。") : "不支持本地文件夹，使用拖拽回退。"}`);
 </script>
