@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kimi 事件触发 · 虚拟桌面</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root { --ink: #1d1a16; --muted: #6f6a62; --line: #dcd6ca; --win: #fbf9f4; --bar: #ece7dc; --accent: #cf4326; --ok: #2d7a4f; --sel: #cfe0f7; }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; overflow: hidden; }
+body { font-family: "Noto Sans SC", "PingFang SC", sans-serif; font-size: 13px; color: var(--ink); user-select: none;
+  background: radial-gradient(120% 90% at 15% 10%, #e9b08f 0%, transparent 55%), radial-gradient(90% 80% at 90% 90%, #38566b 0%, transparent 60%), linear-gradient(135deg, #c96a4b, #2a3a48); }
+.menubar { position: absolute; inset: 0 0 auto 0; height: 28px; background: rgba(250,247,240,.72); backdrop-filter: blur(14px); display: flex; align-items: center; gap: 18px; padding: 0 14px; font-size: 13px; z-index: 1; }
+.menubar b { font-weight: 700; } .menubar .sp { margin-left: auto; } .menubar .dim { color: var(--muted); }
+.win { position: absolute; background: var(--win); border-radius: 12px; box-shadow: 0 22px 60px rgba(0,0,0,.35), 0 0 0 1px rgba(0,0,0,.18); display: grid; grid-template-rows: auto minmax(0, 1fr); overflow: hidden; }
+.tb { height: 38px; background: var(--bar); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; padding: 0 12px; cursor: default; }
+.lights { display: flex; gap: 7px; } .lights i { width: 12px; height: 12px; border-radius: 50%; background: #d8695b; } .lights i:nth-child(2) { background: #dfb24a; } .lights i:nth-child(3) { background: #6fb26a; }
+.tb .ttl { font-weight: 500; } .tb .dim { color: var(--muted); font-size: 12px; }
+.url { flex: 1; background: var(--win); border: 1px solid var(--line); border-radius: 8px; padding: 3px 12px; font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tab { background: var(--win); border: 1px solid var(--line); border-bottom: 0; border-radius: 8px 8px 0 0; padding: 5px 14px; align-self: flex-end; font-size: 12.5px; white-space: nowrap; }
+#wBrowser { left: 20px; top: 44px; width: calc(60% - 20px); bottom: 20px; grid-template-rows: auto auto minmax(0, 1fr); }
+#wBrowser iframe { width: 100%; height: 100%; border: 0; background: #f3efe6; }
+#wDown { left: calc(60% + 20px); right: 20px; top: 44px; height: 250px; }
+#wMeet { left: calc(60% + 20px); right: 20px; top: 314px; bottom: 20px; }
+#wMeet.over { box-shadow: 0 22px 60px rgba(0,0,0,.35), 0 0 0 3px var(--accent); }
+.body { overflow: auto; padding: 12px; }
+.grid { display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; }
+.file { width: 104px; padding: 8px 4px; border-radius: 8px; display: grid; justify-items: center; gap: 6px; text-align: center; cursor: default; touch-action: none; }
+.file:hover, .file.sel { background: var(--sel); }
+.ico { width: 44px; height: 54px; border-radius: 6px; background: #fff; border: 1px solid #c9c2b4; position: relative; display: grid; place-items: end center; padding-bottom: 6px; font-family: "IBM Plex Mono", monospace; font-size: 10px; font-weight: 500; color: #fff; }
+.ico::before { content: attr(data-ext); background: var(--c, #777); border-radius: 3px; padding: 0 5px; }
+.ico::after { content: ""; position: absolute; top: -1px; right: -1px; border: 6px solid; border-color: var(--bar) var(--bar) #c9c2b4 #c9c2b4; border-radius: 0 6px 0 3px; }
+.ico.sm { width: 18px; height: 22px; padding: 0; border-radius: 3px; } .ico.sm::before { content: ""; position: absolute; inset: auto 3px 3px 3px; height: 4px; padding: 0; border-radius: 1px; } .ico.sm::after { border-width: 3px; }
+.fold { width: 20px; height: 15px; border-radius: 2px 3px 3px 3px; background: #6f9fd8; position: relative; flex: none; } .fold::before { content: ""; position: absolute; left: 0; top: -3px; width: 9px; height: 4px; background: #6f9fd8; border-radius: 2px 2px 0 0; }
+.fn { font-size: 12px; line-height: 1.35; overflow-wrap: anywhere; }
+.rows { display: grid; }
+.rowh, .r { display: grid; grid-template-columns: minmax(0, 1fr) 76px 70px; gap: 8px; padding: 5px 8px; align-items: center; }
+.rowh { color: var(--muted); font-size: 11.5px; border-bottom: 1px solid var(--line); }
+.r { border-radius: 6px; } .r:nth-child(even) { background: rgba(0,0,0,.035); } .r.click:hover { background: var(--sel); }
+.r .n { display: flex; gap: 8px; align-items: center; min-width: 0; } .r .n span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.r.child .n { padding-left: 26px; } .r .m { color: var(--muted); font-size: 11.5px; font-family: "IBM Plex Mono", monospace; }
+.r.new { animation: pop .9s ease; } @keyframes pop { 0% { background: #f6d9cf; transform: translateX(8px); opacity: 0; } 30% { opacity: 1; transform: none; } 100% { background: transparent; } }
+.empty { color: var(--muted); text-align: center; padding: 34px 10px; border: 2px dashed var(--line); border-radius: 10px; margin-top: 10px; }
+#ghost { position: fixed; pointer-events: none; z-index: 50; opacity: .85; transform: translate(-50%, -50%); display: none; }
+.scrim { position: absolute; inset: 0; background: rgba(0,0,0,.28); z-index: 5; display: grid; place-items: start center; }
+.sheet { margin-top: 70px; width: min(440px, 90%); background: var(--win); border-radius: 12px; box-shadow: 0 18px 50px rgba(0,0,0,.4); padding: 16px; display: grid; gap: 12px; animation: drop .25s ease; }
+@keyframes drop { from { transform: translateY(-14px); opacity: 0; } }
+.sheet h3 { margin: 0; font-size: 15px; } .sheet p { margin: 0; color: var(--muted); }
+.pick { border: 1px solid var(--line); border-radius: 8px; background: #fff; display: grid; }
+.pick div { display: flex; gap: 10px; align-items: center; padding: 8px 12px; } .pick div.off { opacity: .4; } .pick div.on { background: var(--sel); }
+.act { display: flex; justify-content: flex-end; gap: 8px; }
+button { font: inherit; border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 5px 16px; cursor: pointer; }
+button.pri { background: #2f6fd6; border-color: #2f6fd6; color: #fff; } button:disabled { opacity: .45; cursor: default; }
+.perm { position: absolute; left: 90px; top: 78px; width: 330px; z-index: 6; background: var(--win); border-radius: 12px; box-shadow: 0 18px 50px rgba(0,0,0,.4), 0 0 0 1px rgba(0,0,0,.15); padding: 14px; display: grid; gap: 10px; animation: drop .25s ease; }
+#banners { position: absolute; right: 14px; top: 38px; width: 340px; display: grid; gap: 8px; z-index: 40; }
+.ban { background: rgba(250,247,240,.92); backdrop-filter: blur(16px); border-radius: 14px; box-shadow: 0 12px 34px rgba(0,0,0,.3); padding: 10px 12px; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; animation: slidein .4s cubic-bezier(.2,.9,.3,1.2); cursor: default; }
+@keyframes slidein { from { transform: translateX(380px); } }
+.ban .k { width: 34px; height: 34px; border-radius: 9px; background: var(--ink); color: #fff; display: grid; place-items: center; font-family: "IBM Plex Mono", monospace; }
+.ban.bad .k { background: #b3261e; } .ban b { display: flex; justify-content: space-between; } .ban b small { font-weight: 400; color: var(--muted); } .ban div div { color: #45413a; }
+#wPrev { left: 18%; top: 12%; width: 52%; height: 72%; z-index: 30; }
+#wPrev pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-family: "IBM Plex Mono", "Noto Sans SC", monospace; font-size: 12.5px; line-height: 1.75; user-select: text; }
+.hidden { display: none !important; }
+#cap { position: absolute; left: 50%; bottom: 34px; transform: translateX(-50%); background: rgba(20,18,15,.88); color: #fff; padding: 9px 22px; border-radius: 999px; font-size: 17px; z-index: 60; max-width: 80%; text-align: center; transition: opacity .3s; }
+#cap:empty { opacity: 0; }
+#cursor { position: fixed; z-index: 99; width: 22px; height: 22px; pointer-events: none; display: none; left: 0; top: 0; }
+#cursor.down { transform: scale(.82); } body.rec #cursor { display: block; } body.rec, body.rec * { cursor: none !important; }
+.about { position: absolute; left: 20px; bottom: 2px; font-size: 11px; color: rgba(255,255,255,.75); z-index: 0; }
+.about a { color: inherit; }
+#small { display: none; position: fixed; inset: 0; z-index: 200; background: #1d1a16; color: #fff; place-items: center; padding: 30px; text-align: center; font-size: 16px; }
+@media (max-width: 900px) { #small { display: grid; } }
+</style>
+</head>
+<body>
+<div class="menubar"><b>访达</b><span>文件</span><span>编辑</span><span>显示</span><span>前往</span><span>窗口</span><span class="sp dim">虚拟桌面</span><span id="clock"></span></div>
+
+<section class="win" id="wBrowser" style="z-index:2">
+  <div class="tb" style="height:36px;border-bottom:0"><div class="lights"><i></i><i></i><i></i></div><div class="tab">Kimi 事件触发 Demo</div></div>
+  <div class="tb" style="height:34px"><span class="dim">←　→　↻</span><div class="url">bill306.github.io/kimi-event-trigger-case2</div></div>
+  <iframe id="app" title="Kimi 事件触发 Demo"></iframe>
+</section>
+
+<section class="win" id="wDown" style="z-index:3">
+  <div class="tb"><div class="lights"><i></i><i></i><i></i></div><span class="fold"></span><span class="ttl">下载</span><span class="dim" id="downCount"></span></div>
+  <div class="body"><div class="grid" id="down"></div></div>
+</section>
+
+<section class="win" id="wMeet" style="z-index:3">
+  <div class="tb"><div class="lights"><i></i><i></i><i></i></div><span class="fold"></span><span class="ttl">会议录音</span><span class="dim" id="meetCount"></span></div>
+  <div class="body"><div class="rowh"><span>名称</span><span>大小</span><span>修改时间</span></div><div class="rows" id="meet"></div></div>
+</section>
+
+<section class="win hidden" id="wPrev">
+  <div class="tb"><div class="lights" id="prevClose" title="关闭"><i></i><i></i><i></i></div><span class="ttl" id="prevName"></span><span class="dim">预览</span></div>
+  <div class="body"><pre id="prevText"></pre></div>
+</section>
+
+<div id="banners"></div>
+<div id="ghost"></div>
+<div id="cap"></div>
+<svg id="cursor" viewBox="0 0 22 22"><path d="M3 2l14 9-6.2 1.2L14 19l-2.6 1.2-3.1-6.7L3 17z" fill="#111" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>
+<div class="about">这是浏览器里模拟的一台电脑：窗口和文件夹是模拟的，文件写入、检测、转写、生成纪要的链路是真实运行的。<a href="index.html">在自己的电脑上用真实文件夹试</a></div>
+<div id="small">这个虚拟桌面需要在电脑浏览器里打开（窗口宽度至少 900 像素）。</div>
+
+<script type="module">
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const fmtSize = n => n < 1024 ? n + " B" : n < 1048576 ? Math.round(n / 1024) + " KB" : (n / 1048576).toFixed(1) + " MB";
+const EXT_COLOR = { m4a: "#cf4326", mp3: "#cf4326", webm: "#cf4326", txt: "#5a6876", pdf: "#b3261e", md: "#2d7a4f", jsonl: "#8f5b08" };
+const ext = n => (n.match(/\.([^.]+)$/) || [, ""])[1].toLowerCase();
+const icon = (n, sm) => `<span class="ico ${sm ? "sm" : ""}" data-ext="${esc(ext(n))}" style="--c:${EXT_COLOR[ext(n)] || "#777"}"></span>`;
+const QS = new URLSearchParams(location.search);
+if (QS.has("rec")) document.body.classList.add("rec");
+
+const DOWNLOADS = [
+  { name: "周会录音.m4a", url: "samples/sample-meeting.m4a" },
+  { name: "分享会录音.m4a", url: "samples/google-talk.m4a" },
+  { name: "周会文字稿.txt", url: "samples/sample-meeting.txt" },
+  { name: "会议资料.pdf", text: "%PDF-1.4 demo" },
+];
+
+/* 每次打开都是一台干净的电脑：清空沙盒文件夹和去重记录，再加载 Demo */
+const root = await navigator.storage.getDirectory();
+try { await root.removeEntry("会议录音", { recursive: true }); } catch {}
+const meetDir = await root.getDirectoryHandle("会议录音", { create: true });
+try { localStorage.removeItem("kimi-demo-seen"); } catch {}
+$("#app").src = "index.html?opfs&embed";
+
+setInterval(() => { $("#clock").textContent = new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }); }, 1000);
+
+/* ---------- 下载文件夹 ---------- */
+$("#down").innerHTML = DOWNLOADS.map((f, i) => `<div class="file" data-i="${i}">${icon(f.name)}<span class="fn">${esc(f.name)}</span></div>`).join("");
+$("#downCount").textContent = `${DOWNLOADS.length} 项`;
+
+/* ---------- 拖拽：从“下载”拖到“会议录音” ---------- */
+let drag = null;
+const ghost = $("#ghost");
+$("#down").addEventListener("pointerdown", e => {
+  const el = e.target.closest(".file"); if (!el) return;
+  document.querySelectorAll(".file.sel").forEach(x => x.classList.remove("sel")); el.classList.add("sel");
+  drag = { f: DOWNLOADS[el.dataset.i], x: e.clientX, y: e.clientY, moved: false };
+  el.setPointerCapture(e.pointerId);
+});
+addEventListener("pointermove", e => {
+  if (!drag) return;
+  if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 5) return;
+  if (!drag.moved) { drag.moved = true; ghost.innerHTML = `<div class="file sel">${icon(drag.f.name)}<span class="fn">${esc(drag.f.name)}</span></div>`; ghost.style.display = "block"; }
+  ghost.style.left = e.clientX + "px"; ghost.style.top = e.clientY + "px";
+  $("#wMeet").classList.toggle("over", inside($("#wMeet"), e));
+});
+addEventListener("pointerup", async e => {
+  if (!drag) return;
+  const d = drag; drag = null; ghost.style.display = "none"; $("#wMeet").classList.remove("over");
+  if (d.moved && inside($("#wMeet"), e)) await copyIn(d.f);
+});
+const inside = (el, e) => { const r = el.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; };
+
+async function copyIn(f) {
+  const bytes = new Uint8Array(f.url ? await (await fetch(f.url)).arrayBuffer() : new TextEncoder().encode(f.text));
+  let name = f.name, n = 2;
+  for (;;) { try { await meetDir.getFileHandle(name); name = f.name.replace(/(\.[^.]+)$/, ` ${n++}$1`); } catch { break; } }
+  const fh = await meetDir.getFileHandle(name, { create: true });
+  const chunks = bytes.length > 4096 ? 4 : 1, size = Math.ceil(bytes.length / chunks);   // 大文件分段落盘，和真实拷贝一样不是瞬间完成
+  for (let i = 0; i < chunks; i++) {
+    const w = await fh.createWritable({ keepExistingData: i > 0 });
+    await w.seek(i * size); await w.write(bytes.slice(i * size, (i + 1) * size)); await w.close();
+    refresh(); if (i < chunks - 1) await sleep(450);
+  }
+}
+
+/* ---------- 会议录音文件夹：实时列出沙盒里的真实文件 ---------- */
+const seenRows = new Set(); let lastSig = "";
+async function refresh() {
+  const top = [], dirs = [];
+  for await (const [name, h] of meetDir.entries()) {
+    if (h.kind === "file") { const f = await h.getFile(); top.push({ name, size: f.size, t: f.lastModified, path: name }); }
+    else {
+      const kids = [];
+      for await (const [cn, ch] of h.entries()) if (ch.kind === "file") { const f = await ch.getFile(); kids.push({ name: cn, size: f.size, t: f.lastModified, child: true, path: name + "/" + cn }); }
+      dirs.push({ name, dir: true, path: name + "/", kids: kids.sort((a, b) => a.name.localeCompare(b.name, "zh")) });
+    }
+  }
+  top.sort((a, b) => a.name.localeCompare(b.name, "zh"));
+  const rows = [...dirs.flatMap(d => [d, ...d.kids]), ...top];
+  const sig = rows.map(r => r.path + r.size).join("|");
+  if (sig === lastSig) return; lastSig = sig;
+  const files = rows.filter(r => !r.dir && !r.child).length;
+  $("#meetCount").textContent = rows.length ? `${files} 个文件` : "";
+  $("#meet").innerHTML = rows.length ? rows.map(r => {
+    const isNew = !seenRows.has(r.path); seenRows.add(r.path);
+    const canOpen = !r.dir && ["md", "txt", "jsonl"].includes(ext(r.name));
+    return `<div class="r ${r.child ? "child" : ""} ${isNew ? "new" : ""} ${canOpen ? "click" : ""}" ${canOpen ? `data-open="${esc(r.path)}"` : ""}>
+      <span class="n">${r.dir ? `<span class="fold"></span>` : icon(r.name, true)}<span>${esc(r.name)}</span></span>
+      <span class="m">${r.dir ? "--" : fmtSize(r.size)}</span><span class="m">${r.dir ? "" : new Date(r.t).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span></div>`;
+  }).join("") : `<div class="empty">空文件夹<br>把“下载”里的录音拖到这里</div>`;
+}
+setInterval(refresh, 600); refresh();
+
+$("#meet").addEventListener("click", async e => {
+  const r = e.target.closest("[data-open]"); if (!r) return;
+  const [a, b] = r.dataset.open.split("/");
+  const fh = b ? await (await meetDir.getDirectoryHandle(a)).getFileHandle(b) : await meetDir.getFileHandle(a);
+  $("#prevName").textContent = b || a; $("#prevText").textContent = await (await fh.getFile()).text();
+  $("#wPrev").classList.remove("hidden"); front($("#wPrev"));
+});
+$("#prevClose").onclick = () => $("#wPrev").classList.add("hidden");
+
+/* ---------- 窗口层级 ---------- */
+let z = 10;
+const front = w => { w.style.zIndex = ++z; };
+document.querySelectorAll(".win").forEach(w => w.addEventListener("pointerdown", () => front(w)));
+
+/* ---------- 来自 Demo 页面的请求：选文件夹、通知、鼠标位置 ---------- */
+addEventListener("message", e => {
+  if (e.origin !== location.origin || !e.data?.kimi) return;
+  const d = e.data;
+  if (d.kimi === "pick") pickFolder().then(ok => $("#app").contentWindow.postMessage({ kimiReply: d.id, ok }, location.origin));
+  else if (d.kimi === "notify") banner(d.title, d.body, d.bad);
+  else if (d.kimi === "mouse") { const r = $("#app").getBoundingClientRect(); moveCursor(r.left + d.x, r.top + d.y, d.t); }
+});
+
+function pickFolder() {
+  return new Promise(res => {
+    front($("#wBrowser"));
+    const scrim = document.createElement("div"); scrim.className = "scrim";
+    scrim.innerHTML = `<div class="sheet"><h3>选择 Kimi 可以监听的文件夹</h3>
+      <div class="pick"><div class="off"><span class="fold"></span>桌面</div><div class="off"><span class="fold"></span>文稿</div><div class="off"><span class="fold"></span>下载</div><div id="pkMeet"><span class="fold"></span>会议录音</div></div>
+      <p>虚拟桌面里只开放“会议录音”这一个文件夹。</p>
+      <div class="act"><button id="pkCancel">取消</button><button class="pri" id="pkOk" disabled>选择</button></div></div>`;
+    $("#wBrowser").appendChild(scrim);
+    scrim.querySelector("#pkMeet").onclick = ev => { ev.currentTarget.classList.add("on"); scrim.querySelector("#pkOk").disabled = false; };
+    scrim.querySelector("#pkCancel").onclick = () => { scrim.remove(); res(false); };
+    scrim.querySelector("#pkOk").onclick = () => {
+      scrim.innerHTML = `<div class="perm"><b>要允许此网站查看和编辑“会议录音”中的文件吗？</b><span style="color:var(--muted)">bill306.github.io 将能读取这个文件夹，并在其中保存更改，直到你关闭此网站的所有标签页。</span>
+        <div class="act"><button id="pmNo">取消</button><button class="pri" id="pmYes">允许</button></div></div>`;
+      scrim.style.placeItems = "start"; 
+      scrim.querySelector("#pmNo").onclick = () => { scrim.remove(); res(false); };
+      scrim.querySelector("#pmYes").onclick = () => { scrim.remove(); res(true); };
+    };
+  });
+}
+
+function banner(title, body, bad) {
+  const b = document.createElement("div"); b.className = "ban" + (bad ? " bad" : "");
+  b.innerHTML = `<span class="k">K</span><div><b>${esc(title)}<small>现在</small></b><div>${esc(body)}</div></div>`;
+  b.onclick = () => { front($("#wBrowser")); b.remove(); };
+  $("#banners").appendChild(b); setTimeout(() => b.remove(), 9000);
+}
+
+/* ---------- 录屏辅助：可见的鼠标指针和字幕 ---------- */
+const cur = $("#cursor");
+function moveCursor(x, y, t) { cur.style.left = x + "px"; cur.style.top = y + "px"; if (t === "mousedown") cur.classList.add("down"); if (t === "mouseup") cur.classList.remove("down"); }
+for (const t of ["mousemove", "mousedown", "mouseup"]) addEventListener(t, e => moveCursor(e.clientX, e.clientY, t), true);
+window.caption = t => { $("#cap").textContent = t || ""; };
+</script>
+</body>
+</html>

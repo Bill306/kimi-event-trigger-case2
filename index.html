@@ -210,6 +210,8 @@ dialog form { display: grid; gap: 12px; }
 .toast b { display: block; } .toast.bad { border-left-color: var(--bad); } .toast.show { display: block; animation: rise .3s ease both; }
 #asrProg { position: fixed; left: 16px; bottom: 16px; width: min(340px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; box-shadow: 0 10px 34px rgba(0,0,0,.18); z-index: 9; display: grid; gap: 6px; }
 #asrProg .meter i { background: var(--accent); }
+body.embed .hero h1, body.embed .lede, body.embed .facts, body.embed #tools, body.embed .coach .pmnote, body.embed .coach .small, body.embed .topact a { display: none; }
+body.embed .hero { padding-top: 14px; } body.embed .stepper { margin-top: 0; }
 @media (max-width: 560px) {
   .top { position: static; } .tagline { display: none; }
   .msg { grid-template-columns: minmax(0, 1fr); } .msg .av { display: none; }
@@ -225,6 +227,8 @@ dialog form { display: grid; gap: 12px; }
   <div class="topact">
     <button class="chip" id="engineChip" data-act="settings"></button>
     <button class="chip" id="notesBtn" data-act="notes" aria-pressed="true">设计说明：开</button>
+    <a href="desktop.html">虚拟桌面</a>
+    <a href="demo.mp4">演示视频</a>
     <a href="overview.html">方案说明页</a>
   </div>
 </div></div>
@@ -618,6 +622,19 @@ const S = {
   queue: Promise.resolve(), asr: null, asrName: null, sample: null, recorder: null, baseline: 0,
   seen: loadSeen(),
 };
+const QS = new URLSearchParams(location.search);
+const EMBED = QS.has("embed") && window.parent !== window;   // 嵌在虚拟桌面（desktop.html）里
+if (EMBED) {
+  document.body.classList.add("embed");
+  for (const t of ["mousemove", "mousedown", "mouseup"]) addEventListener(t, e => parent.postMessage({ kimi: "mouse", t, x: e.clientX, y: e.clientY }, location.origin), true);
+}
+function askParent(type) {
+  return new Promise(res => {
+    const id = uid();
+    const h = e => { if (e.origin === location.origin && e.data?.kimiReply === id) { removeEventListener("message", h); res(e.data.ok); } };
+    addEventListener("message", h); parent.postMessage({ kimi: type, id }, location.origin);
+  });
+}
 const hasFS = "showDirectoryPicker" in window;
 const hasObserver = "FileSystemObserver" in window;
 const checks = {
@@ -713,6 +730,7 @@ function renderFlow() {
   $("#coachTitle").textContent = st === 4 ? "主流程跑通了" : S.fallback ? "把一段录音拖进来" : "往文件夹里存一段录音";
   $("#coachText").textContent = st === 4 ? "可以再存一段自己的录音，或者试试下面几种容易出错的情况。"
     : S.fallback ? "当前浏览器不能监听本地文件夹，只能用拖拽代替。"
+    : EMBED ? `在访达里把录音拖进「${dirName}」文件夹就行，之后什么都不用做。`
     : `在访达里把录音拖进「${dirName}」就行；手边没有录音，可以用下面的按钮代劳。`;
   $("#tools").classList.toggle("hidden", S.fallback);
   $("#dropZone").classList.toggle("hidden", !S.fallback);
@@ -733,13 +751,14 @@ async function enable() {
   let dir;
   try {
     // ?opfs：自动化测试用，改用浏览器沙盒文件夹（OPFS），接口与真实文件夹相同
-    dir = new URLSearchParams(location.search).has("opfs")
+    if (EMBED && !(await askParent("pick"))) return;   // 虚拟桌面里由外层弹出“选择文件夹”和授权
+    dir = QS.has("opfs")
       ? await (await navigator.storage.getDirectory()).getDirectoryHandle("会议录音", { create: true })
       : await window.showDirectoryPicker({ id: "kimi-demo", mode: "readwrite" });
   } catch (e) { if (e.name !== "AbortError") { log("bad", "选择文件夹失败：" + e.message); toast("没能打开文件夹", e.message, true); } return; }
   stopWatching();
   S.dir = dir;
-  if ("Notification" in window && Notification.permission === "default") { try { await Notification.requestPermission(); } catch {} }
+  if (!EMBED && "Notification" in window && Notification.permission === "default") { try { await Notification.requestPermission(); } catch {} }
   S.known.clear(); S.tempSeen.clear();
   let n = 0;
   for await (const [name, h] of dir.entries()) {
@@ -750,7 +769,7 @@ async function enable() {
   log("info", `开始监听「${dir.name}/」。已有 ${n} 个文件记为基线，不会触发。`);
   log("dim", `输出写入 ${OUT_DIR}/ 子目录；监听只看顶层文件，所以自己的产物不会再次触发自己。`);
   startWatching();
-  const notif = "Notification" in window && Notification.permission === "granted";
+  const notif = EMBED || ("Notification" in window && Notification.permission === "granted");
   say(`<p>好了，我开始盯着 <code>${esc(dir.name)}/</code> 了。${n ? `里面原有的 ${n} 个文件我不会处理，` : ""}之后新存进来的录音，我会自动整理成纪要，放进 <code>${OUT_DIR}/</code>${notif ? "，并发桌面通知" : "（你没有允许桌面通知，我会在页面里提示）"}。</p><p>现在可以去忙别的了。想马上看效果，就往文件夹里存一段录音。</p>
   ${note("开启时把已有文件记为基线、不回溯处理：用户说的是“出现新的录音时”，一开启就处理几十个历史文件会是一次意外的大动作。")}`);
 }
@@ -1022,6 +1041,7 @@ async function deliver(run) {
   return parts.join(" + ");
 }
 function notify(title, body, run, bad = false) {
+  if (EMBED) { parent.postMessage({ kimi: "notify", title, body, bad }, location.origin); return true; }
   toast(title, body, bad);
   if ("Notification" in window && Notification.permission === "granted") {
     try {
