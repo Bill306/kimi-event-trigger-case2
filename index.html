@@ -5,252 +5,327 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kimi 事件触发 Demo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root {
-  --bg: #f5f7f9; --surface: #ffffff; --ink: #15202b; --muted: #5a6876; --line: #d9e0e7;
-  --accent: #0a6e8a; --accent-soft: #e2f1f5; --ok: #1f7a4a; --ok-soft: #e3f3ea;
-  --warn: #9a5b00; --warn-soft: #fbefdc; --bad: #b3261e; --bad-soft: #fbe5e3; --code-bg: #eef2f5;
-  --f-display: "Space Grotesk", "Noto Sans SC", "PingFang SC", sans-serif;
+  --bg: #f3efe6; --surface: #fffdf9; --ink: #1d1a16; --muted: #6b645a; --line: #e0d9cb;
+  --accent: #cf4326; --accent-soft: #fbe7df; --on-accent: #fff;
+  --ok: #2d7a4f; --ok-soft: #e2f1e7; --warn: #8f5b08; --warn-soft: #f8ecd3; --bad: #b3261e; --bad-soft: #f9e0dc;
+  --note: #2b5fb3; --note-soft: #e8effb; --code-bg: #efe9dd;
+  --f-display: "Noto Serif SC", "Songti SC", serif;
   --f-body: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  --f-mono: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  --f-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f151b; --surface: #16202a; --ink: #e4ebf1; --muted: #93a3b2; --line: #2a3744;
-    --accent: #4fc0dd; --accent-soft: #15323c; --ok: #5fcf8f; --ok-soft: #173326;
-    --warn: #f0b45a; --warn-soft: #3a2a12; --bad: #ff8a80; --bad-soft: #3d1c1a; --code-bg: #1c2833; color-scheme: dark;
+    --bg: #15130f; --surface: #1e1b16; --ink: #ece6da; --muted: #a0988a; --line: #353027;
+    --accent: #ff7a5c; --accent-soft: #3a2019; --on-accent: #15130f;
+    --ok: #6fd09a; --ok-soft: #17301f; --warn: #e9b55c; --warn-soft: #36290f; --bad: #ff8a80; --bad-soft: #3d1c1a;
+    --note: #8fb6ff; --note-soft: #18243a; --code-bg: #262219; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0f151b; --surface: #16202a; --ink: #e4ebf1; --muted: #93a3b2; --line: #2a3744;
-  --accent: #4fc0dd; --accent-soft: #15323c; --ok: #5fcf8f; --ok-soft: #173326;
-  --warn: #f0b45a; --warn-soft: #3a2a12; --bad: #ff8a80; --bad-soft: #3d1c1a; --code-bg: #1c2833; color-scheme: dark;
+  --bg: #15130f; --surface: #1e1b16; --ink: #ece6da; --muted: #a0988a; --line: #353027;
+  --accent: #ff7a5c; --accent-soft: #3a2019; --on-accent: #15130f;
+  --ok: #6fd09a; --ok-soft: #17301f; --warn: #e9b55c; --warn-soft: #36290f; --bad: #ff8a80; --bad-soft: #3d1c1a;
+  --note: #8fb6ff; --note-soft: #18243a; --code-bg: #262219; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.7;
-  padding: 0 max(16px, env(safe-area-inset-left, 0px)) 64px; }
-.wrap { max-width: 1240px; margin: 0 auto; }
-h1, h2, h3 { font-family: var(--f-display); margin: 0; line-height: 1.3; }
-h1 { font-size: clamp(26px, 4vw, 38px); }
-h2 { font-size: 17px; }
-.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
-.hero { padding: 36px 0 20px; display: grid; gap: 8px; }
-.lede { color: var(--muted); max-width: 820px; margin: 0; }
-.notice { border: 1px solid var(--line); border-left: 4px solid var(--accent); background: var(--surface); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
-.notice.warn { border-left-color: var(--warn); background: var(--warn-soft); }
-.grid { display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 18px; align-items: start; margin-top: 18px; }
-@media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
-.col { display: grid; gap: 16px; min-width: 0; }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
-.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-.step { font-family: var(--f-mono); font-size: 11px; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 1px 8px; }
-label { font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
-textarea, input, select { font: inherit; font-size: 14px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; }
-textarea { resize: vertical; min-height: 76px; }
-.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.row > * { flex: 1 1 auto; }
-button, .btn { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 7px 12px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-button:hover:not(:disabled), .btn:hover { border-color: var(--accent); }
-button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-:root[data-theme="dark"] button.primary { color: #0f151b; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) button.primary { color: #0f151b; } }
-button:disabled { opacity: .45; cursor: not-allowed; }
+  background-image: radial-gradient(color-mix(in srgb, var(--line) 70%, transparent) 1px, transparent 1px); background-size: 22px 22px; padding-bottom: 72px; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+a { color: var(--accent); }
+h1, h2, h3, h4 { margin: 0; line-height: 1.3; }
+code, .mono { font-family: var(--f-mono); font-size: .86em; }
+code { background: var(--code-bg); border-radius: 4px; padding: 0 4px; }
+.hidden { display: none !important; }
 .small { font-size: 12.5px; color: var(--muted); }
-code, .mono { font-family: var(--f-mono); font-size: 12.5px; }
-.badge { font-size: 12px; padding: 1px 9px; border-radius: 999px; background: var(--code-bg); color: var(--muted); white-space: nowrap; }
-.badge.ok { background: var(--ok-soft); color: var(--ok); }
-.badge.warn { background: var(--warn-soft); color: var(--warn); }
-.badge.bad { background: var(--bad-soft); color: var(--bad); }
-.badge.live { background: var(--accent-soft); color: var(--accent); }
-.acard { border: 1.5px solid var(--accent); border-radius: 12px; padding: 14px; display: grid; gap: 10px; }
-.acard .say { background: var(--code-bg); border-radius: 8px; padding: 8px 10px; font-size: 13.5px; }
-.acard dl { display: grid; grid-template-columns: 76px 1fr; gap: 6px 10px; margin: 0; font-size: 13.5px; }
-.acard dt { color: var(--muted); }
-.acard dd { margin: 0; }
-details summary { cursor: pointer; font-size: 13.5px; color: var(--muted); }
-.status { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; }
-.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line); flex: none; }
-.dot.on { background: var(--ok); box-shadow: 0 0 0 0 var(--ok); animation: pulse 1.6s infinite; }
-@keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 50%, transparent); } 100% { box-shadow: 0 0 0 10px transparent; } }
-@media (prefers-reduced-motion: reduce) { .dot.on { animation: none; } }
-.pipe { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.pipe li { display: grid; grid-template-columns: 22px 120px minmax(0, 1fr) 58px; gap: 8px; align-items: baseline; padding: 6px 8px; border-radius: 8px; font-size: 13.5px; }
-.pipe li .ic { font-family: var(--f-mono); text-align: center; color: var(--muted); }
-.pipe li .nm { font-weight: 500; }
-.pipe li .dt { color: var(--muted); overflow-wrap: anywhere; }
-.pipe li .ms { font-family: var(--f-mono); font-size: 12px; color: var(--muted); text-align: right; }
-.pipe li.active { background: var(--accent-soft); }
-.pipe li.active .ic { color: var(--accent); }
-.pipe li.done .ic { color: var(--ok); }
-.pipe li.skip { background: var(--warn-soft); } .pipe li.skip .ic { color: var(--warn); }
-.pipe li.fail { background: var(--bad-soft); } .pipe li.fail .ic { color: var(--bad); }
-@media (max-width: 600px) { .pipe li { grid-template-columns: 22px minmax(0,1fr) 52px; } .pipe li .dt { grid-column: 2 / 4; } }
-.checks { display: grid; gap: 8px; }
-.check { display: grid; grid-template-columns: 24px minmax(0,1fr); gap: 8px; border: 1px dashed var(--line); border-radius: 10px; padding: 8px 10px; font-size: 13.5px; }
-.check .ic { font-family: var(--f-mono); color: var(--muted); }
-.check.pass { border-style: solid; border-color: var(--ok); background: var(--ok-soft); }
-.check.pass .ic { color: var(--ok); }
-.check b { font-family: var(--f-display); }
-.check .ev { color: var(--muted); font-size: 12.5px; white-space: pre-line; }
-.log { background: var(--code-bg); border-radius: 10px; padding: 10px 12px; font-family: var(--f-mono); font-size: 12px; line-height: 1.65; height: 240px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
-.log .t { color: var(--muted); }
-.log .warn { color: var(--warn); } .log .bad { color: var(--bad); } .log .ok { color: var(--ok); } .log .dim { color: var(--muted); }
-.runs { display: grid; gap: 6px; }
-.run { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; text-align: left; padding: 8px 10px; }
-.run.sel { border-color: var(--accent); background: var(--accent-soft); }
-.run .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tabs { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
-.tabs button { border: none; border-bottom: 2px solid transparent; border-radius: 0; padding: 6px 10px; background: none; color: var(--muted); }
-.tabs button.on { color: var(--accent); border-bottom-color: var(--accent); }
-pre { margin: 0; background: var(--code-bg); border-radius: 10px; padding: 12px; font-family: var(--f-mono); font-size: 12px; line-height: 1.6; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 420px; }
-.minutes { display: grid; gap: 10px; font-size: 14.5px; }
-.minutes h3 { font-size: 14px; color: var(--accent); }
-.minutes ul { margin: 0; padding-left: 20px; }
+
+/* 顶栏 */
+.top { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.topin { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.logo { width: 26px; height: 26px; border-radius: 8px; background: var(--ink); color: var(--bg); display: grid; place-items: center; font-family: var(--f-mono); font-size: 13px; }
+.tagline { font-weight: 400; color: var(--muted); font-size: 13px; }
+.topact { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+button, .btn { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 7px 13px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: border-color .15s, transform .1s; }
+button:hover:not(:disabled), .btn:hover { border-color: var(--ink); }
+button:active:not(:disabled) { transform: translateY(1px); }
+button:focus-visible, .btn:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 500; }
+button.primary:hover:not(:disabled) { border-color: var(--accent); filter: brightness(1.06); }
+button.ghost { background: none; }
+button.chip { border-radius: 999px; padding: 3px 12px; font-size: 13px; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+
+/* 首屏 */
+.hero { padding: 40px 0 8px; display: grid; gap: 14px; }
+h1 { font-family: var(--f-display); font-size: clamp(28px, 4.4vw, 46px); letter-spacing: -.01em; }
+h1 em { font-style: normal; color: var(--accent); }
+.lede { color: var(--muted); max-width: 720px; margin: 0; font-size: 16px; }
+.facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; font-size: 13px; }
+.facts li { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 2px 12px; }
+.facts li::before { content: "✓ "; color: var(--ok); }
+.notice { border: 1px solid var(--warn); background: var(--warn-soft); border-radius: 12px; padding: 10px 14px; font-size: 14px; }
+.stepper { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; counter-reset: s; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); overflow: hidden; }
+.stepper li { counter-increment: s; padding: 12px 16px; display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: center; border-right: 1px solid var(--line); color: var(--muted); }
+.stepper li:last-child { border-right: 0; }
+.stepper li::before { content: counter(s); width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; font-family: var(--f-mono); font-size: 13px; }
+.stepper b { display: block; font-size: 14.5px; }
+.stepper span { font-size: 12.5px; }
+.stepper li.on { color: var(--ink); background: var(--accent-soft); }
+.stepper li.on::before { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.stepper li.done { color: var(--ink); }
+.stepper li.done::before { content: "✓"; background: var(--ok); border-color: var(--ok); color: var(--surface); }
+@media (max-width: 720px) { .stepper { grid-template-columns: 1fr; } .stepper li { border-right: 0; border-bottom: 1px solid var(--line); } .stepper li:last-child { border-bottom: 0; } }
+
+/* 主体 */
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 350px; gap: 20px; align-items: start; margin-top: 20px; }
+@media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.panel h2 { font-family: var(--f-display); font-size: 17px; }
+.eyebrow { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.side { display: grid; gap: 16px; position: sticky; top: 62px; }
+@media (max-width: 980px) { .side { position: static; } }
+
+/* 对话区 */
+.chat { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; min-width: 0; display: grid; }
+.chat-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 10px 16px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+.live { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--ink); }
+.live button { padding: 2px 10px; font-size: 12.5px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--line); flex: none; }
+.dot.on { background: var(--ok); animation: pulse 1.6s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 55%, transparent); } 100% { box-shadow: 0 0 0 9px transparent; } }
+#thread { padding: 18px 16px 6px; display: grid; gap: 16px; min-height: 180px; }
+.msg { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; animation: rise .35s ease both; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+.av { width: 30px; height: 30px; border-radius: 10px; background: var(--ink); color: var(--bg); display: grid; place-items: center; font-family: var(--f-mono); font-size: 13px; }
+.bub { min-width: 0; display: grid; gap: 10px; align-content: start; }
+.bub > p { margin: 0; }
+.msg.user { grid-template-columns: 1fr; justify-items: end; }
+.msg.user .bub { background: var(--ink); color: var(--bg); border-radius: 16px 16px 4px 16px; padding: 9px 14px; max-width: min(560px, 92%); }
+.typing { display: inline-flex; gap: 4px; padding: 8px 0; }
+.typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: blink 1s infinite; }
+.typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes blink { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+#composer { border-top: 1px solid var(--line); padding: 12px 16px 16px; display: grid; gap: 10px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.inputrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+textarea, input, select { font: inherit; font-size: 14.5px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 9px 12px; width: 100%; }
+textarea { resize: vertical; min-height: 64px; }
+label { font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
+
+/* Automation Card */
+.acard { border: 1.5px solid var(--ink); border-radius: 16px; overflow: hidden; background: var(--surface); box-shadow: 5px 5px 0 var(--line); }
+.acard-top { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.acard-top h3 { font-family: var(--f-display); font-size: 17px; }
+.acard dl { margin: 0; display: grid; grid-template-columns: 92px minmax(0, 1fr); }
+.acard dt, .acard dd { padding: 9px 16px; border-bottom: 1px solid var(--line); margin: 0; font-size: 14px; }
+.acard dt { color: var(--muted); font-size: 13px; }
+.perm { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.perm li::before { content: "✓"; color: var(--ok); margin-right: 6px; font-family: var(--f-mono); }
+.perm li.no::before { content: "✕"; color: var(--bad); }
+.acard-foot { padding: 12px 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.acard details { padding: 8px 16px; border-bottom: 1px solid var(--line); }
+details summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+pre { margin: 8px 0 0; background: var(--code-bg); border-radius: 10px; padding: 12px; font-family: var(--f-mono); font-size: 12px; line-height: 1.6; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 360px; }
+.badge { font-size: 12px; padding: 1px 10px; border-radius: 999px; background: var(--code-bg); color: var(--muted); white-space: nowrap; }
+.badge.ok { background: var(--ok-soft); color: var(--ok); } .badge.warn { background: var(--warn-soft); color: var(--warn); }
+.badge.bad { background: var(--bad-soft); color: var(--bad); } .badge.live { background: var(--accent-soft); color: var(--accent); }
+
+/* 一次运行 */
+.run { border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; background: var(--bg); }
+.run-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; }
+.file { font-family: var(--f-mono); font-size: 13px; overflow-wrap: anywhere; }
+.phases { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.phases li { font-size: 12.5px; color: var(--muted); display: grid; gap: 5px; }
+.phases li::before { content: ""; height: 5px; border-radius: 5px; background: var(--line); }
+.phases li.done { color: var(--ink); } .phases li.done::before { background: var(--ok); }
+.phases li.active { color: var(--accent); font-weight: 500; }
+.phases li.active::before { background: linear-gradient(90deg, var(--accent) 40%, var(--accent-soft) 60%, var(--accent) 80%); background-size: 200% 100%; animation: slide 1.1s linear infinite; }
+@keyframes slide { to { background-position: -200% 0; } }
+.phases li.skip::before { background: var(--warn); } .phases li.fail::before { background: var(--bad); }
+.phases li.fail { color: var(--bad); }
+.run-say { font-size: 14.5px; }
+.run-say.warn { color: var(--warn); } .run-say.bad { color: var(--bad); }
+.minutes { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: grid; gap: 10px; }
+.m-title { font-family: var(--f-display); font-size: 19px; }
+.minutes h4 { font-size: 12px; font-family: var(--f-mono); letter-spacing: .06em; color: var(--accent); font-weight: 500; margin-top: 4px; }
+.minutes p, .minutes ul { margin: 0; } .minutes ul { padding-left: 20px; }
 table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
 th, td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
-th { color: var(--muted); font-weight: 500; }
-.drop { border: 2px dashed var(--line); border-radius: 12px; padding: 22px; text-align: center; color: var(--muted); }
+th { color: var(--muted); font-weight: 500; font-size: 12.5px; }
+th, td:first-child, td:last-child { white-space: nowrap; }
+.metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 560px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+.metric { border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; background: var(--surface); }
+.metric b { display: block; font-family: var(--f-mono); font-size: 16px; }
+.metric span { font-size: 12px; color: var(--muted); }
+.m-foot { display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.steps { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 1px; }
+.steps li { display: grid; grid-template-columns: 18px 104px minmax(0, 1fr) 56px; gap: 8px; font-size: 12.5px; padding: 3px 0; }
+.steps .ic { font-family: var(--f-mono); color: var(--muted); } .steps .dt { color: var(--muted); overflow-wrap: anywhere; }
+.steps .ms { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); text-align: right; }
+.steps li.done .ic { color: var(--ok); } .steps li.active .ic { color: var(--accent); } .steps li.skip .ic { color: var(--warn); } .steps li.fail .ic { color: var(--bad); }
+@media (max-width: 560px) { .steps li { grid-template-columns: 18px minmax(0, 1fr); } .steps .dt, .steps .ms { grid-column: 2; text-align: left; } }
+.tabs { display: flex; gap: 2px; flex-wrap: wrap; border-bottom: 1px solid var(--line); margin-top: 10px; }
+.tabs button { border: none; border-bottom: 2px solid transparent; border-radius: 0; padding: 4px 10px; background: none; color: var(--muted); font-size: 13px; }
+.tabs button.on { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* 设计说明 */
+.pmnote { border-left: 3px solid var(--note); background: var(--note-soft); border-radius: 0 10px 10px 0; padding: 7px 12px; font-size: 13px; color: var(--ink); }
+.pmnote b { color: var(--note); font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; display: block; }
+body.notes-off .pmnote { display: none; }
+
+/* 侧栏 */
+.coach { border: 1.5px solid var(--accent); }
+.coach h2 { font-size: 19px; }
+.coach p { margin: 0; color: var(--muted); font-size: 14px; }
+.stack { display: grid; gap: 8px; }
+.stack button, .stack .btn { width: 100%; justify-content: flex-start; text-align: left; }
+.stack button small, .stack .btn small { margin-left: auto; color: inherit; opacity: .7; font-size: 12px; }
+.drop { border: 2px dashed var(--line); border-radius: 12px; padding: 20px; text-align: center; color: var(--muted); font-size: 14px; }
 .drop.over { border-color: var(--accent); background: var(--accent-soft); }
-.toast { position: fixed; right: 16px; bottom: 16px; max-width: 360px; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--ok); border-radius: 10px; padding: 12px 14px; box-shadow: 0 8px 30px rgba(0,0,0,.15); font-size: 14px; display: none; z-index: 10; }
-.toast.bad { border-left-color: var(--bad); }
-.toast.show { display: block; }
-.prog { height: 4px; background: var(--code-bg); border-radius: 4px; overflow: hidden; }
-.prog > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
-.hidden { display: none !important; }
-footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); }
-a { color: var(--accent); }
+.meter { height: 5px; border-radius: 5px; background: var(--code-bg); overflow: hidden; }
+.meter i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .3s; }
+.case { border: 1px dashed var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 6px; font-size: 13.5px; }
+.case.pass { border-style: solid; border-color: var(--ok); background: var(--ok-soft); }
+.case-h { display: flex; gap: 8px; align-items: baseline; }
+.case-h .ic { font-family: var(--f-mono); color: var(--muted); } .case.pass .ic { color: var(--ok); }
+.case .ex { color: var(--muted); font-size: 12.5px; }
+.case .ev { font-size: 12.5px; white-space: pre-line; }
+.case .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.case .acts button { padding: 3px 10px; font-size: 12.5px; }
+
+.devlog { margin-top: 20px; }
+.log { background: var(--code-bg); border-radius: 10px; padding: 10px 12px; font-family: var(--f-mono); font-size: 12px; line-height: 1.65; height: 220px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.log .t, .log .dim { color: var(--muted); } .log .warn { color: var(--warn); } .log .bad { color: var(--bad); } .log .ok { color: var(--ok); }
+footer { margin-top: 24px; font-size: 12.5px; color: var(--muted); }
+
+dialog { border: 1.5px solid var(--ink); border-radius: 18px; background: var(--surface); color: var(--ink); padding: 20px; width: min(480px, calc(100vw - 32px)); }
+dialog::backdrop { background: rgba(0,0,0,.4); }
+dialog form { display: grid; gap: 12px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; } .row > * { flex: 1 1 140px; }
+.toast { position: fixed; right: 16px; top: 64px; max-width: 360px; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--ok); border-radius: 12px; padding: 12px 14px; box-shadow: 0 10px 34px rgba(0,0,0,.18); font-size: 14px; display: none; z-index: 10; }
+.toast b { display: block; } .toast.bad { border-left-color: var(--bad); } .toast.show { display: block; animation: rise .3s ease both; }
+#asrProg { position: fixed; left: 16px; bottom: 16px; width: min(340px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; box-shadow: 0 10px 34px rgba(0,0,0,.18); z-index: 9; display: grid; gap: 6px; }
+#asrProg .meter i { background: var(--accent); }
+@media (max-width: 560px) {
+  .top { position: static; } .tagline { display: none; }
+  .msg { grid-template-columns: minmax(0, 1fr); } .msg .av { display: none; }
+  .acard dl { grid-template-columns: minmax(0, 1fr); } .acard dt { border-bottom: 0; padding-bottom: 0; }
+  .run, .minutes { padding: 12px; } #thread { padding: 14px 12px 6px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="top"><div class="wrap topin">
+  <div class="brand"><span class="logo">K</span>Kimi 事件触发<span class="tagline">Case 2 · 可运行 Demo</span></div>
+  <div class="topact">
+    <button class="chip" id="engineChip" data-act="settings"></button>
+    <button class="chip" id="notesBtn" data-act="notes" aria-pressed="true">设计说明：开</button>
+    <a href="overview.html">方案说明页</a>
+  </div>
+</div></div>
 
+<div class="wrap">
 <header class="hero">
-  <div class="eyebrow">Case 2 · Kimi 事件触发自动化 · 可运行 Demo</div>
-  <h1>新会议录音 → 自动纪要</h1>
-  <p class="lede">这是一个能真正跑起来的原型：选一个本地文件夹，往里保存录音，页面里的 Desktop Harness 会检测到这次真实的文件写入，等待写完、检查类型、Hash 去重，再转写、生成纪要，最后发桌面通知、写回纪要文件和执行日志。不需要点任何“模拟运行”按钮。</p>
-  <div id="support" class="notice"></div>
+  <h1>说一句话，<br>之后每段会议录音都<em>自动变成纪要</em>。</h1>
+  <p class="lede">不用每次打开对话、上传文件、再打一遍提示词。告诉 Kimi 一次，以后录音一存进文件夹，纪要和待办就送到你手上。这个页面是能真正跑起来的原型。</p>
+  <ul class="facts"><li>真实的文件写入触发，没有“模拟运行”按钮</li><li>录音在你的电脑上转写</li><li>只往 <span class="mono">Kimi纪要/</span> 子目录写结果</li></ul>
+  <div id="support" class="notice hidden"></div>
+  <ol class="stepper" id="stepper">
+    <li><div><b>说出你要的自动化</b><span>一句自然语言</span></div></li>
+    <li><div><b>确认卡片，授权文件夹</b><span>看清它能做什么、不能做什么</span></div></li>
+    <li><div><b>存入录音，等通知</b><span>之后不需要任何操作</span></div></li>
+  </ol>
 </header>
 
 <div class="grid">
-<!-- 左栏：配置与工具 -->
-<div class="col">
-
-  <section class="panel" aria-labelledby="h-config">
-    <div class="panel-head"><h2 id="h-config">配置自动化</h2><span class="step">Step 1 · Configure</span></div>
-    <label>用一句话描述你要的自动化
-      <textarea id="instr">当会议文件夹出现新的录音时，自动生成会议纪要，并提取待办事项。</textarea>
-    </label>
-    <button id="parseBtn" class="primary">生成 Automation Card</button>
-    <div id="card" class="acard hidden" aria-live="polite">
-      <div class="panel-head"><b>新的自动化</b><span id="cardBadge" class="badge warn">待确认</span></div>
-      <div class="say" id="cardSay"></div>
-      <dl>
-        <dt>监控路径</dt><dd id="cardPath">确认后选择文件夹</dd>
-        <dt>触发条件</dt><dd id="cardTrigger"></dd>
-        <dt>执行动作</dt><dd id="cardAction"></dd>
-        <dt>权限范围</dt><dd id="cardPerm"></dd>
-        <dt>交付</dt><dd id="cardDeliver"></dd>
-      </dl>
-      <details><summary>Saved Prompt（每次触发时注入）</summary><pre id="cardPrompt"></pre></details>
-      <div class="small" id="cardBy"></div>
-      <div class="row">
-        <button id="enableBtn" class="primary">确认并选择文件夹</button>
-        <button id="stopBtn" class="hidden">停止监听</button>
+  <main class="chat" aria-label="与 Kimi 的对话">
+    <div class="chat-head">
+      <span>与 Kimi 的对话</span>
+      <div id="liveBar" class="live hidden"><span id="watchDot" class="dot"></span><span id="watchText"></span><button data-act="pause" id="pauseBtn">暂停</button><button data-act="enable">换文件夹</button></div>
+    </div>
+    <div id="thread" aria-live="polite"></div>
+    <form id="composer">
+      <div class="chips"><span class="small">试试：</span>
+        <button type="button" class="chip" data-act="chip" data-text="当会议文件夹出现新的录音时，自动生成会议纪要，并提取待办事项。">会议录音 → 纪要 + 待办</button>
+        <button type="button" class="chip" data-act="chip" data-text="每当访谈文件夹有新录音，帮我总结要点，列出需要跟进的行动。">访谈录音 → 要点 + 跟进</button>
       </div>
-    </div>
-  </section>
+      <div class="inputrow">
+        <textarea id="instr" aria-label="描述你要的自动化">当会议文件夹出现新的录音时，自动生成会议纪要，并提取待办事项。</textarea>
+        <button class="primary" id="sendBtn">发送</button>
+      </div>
+    </form>
+  </main>
 
-  <section class="panel" aria-labelledby="h-test">
-    <div class="panel-head"><h2 id="h-test">制造真实事件</h2><span class="step">Step 2 · Detect</span></div>
-    <p class="small" style="margin:0">最真实的做法：在访达里把录音拖进你选的文件夹。也可以用下面的按钮让浏览器往文件夹里写文件，效果一样，都是磁盘上的真实写入。</p>
-    <div class="row">
-      <a class="btn" href="samples/sample-meeting.m4a" download>下载示例录音</a>
-      <a class="btn" href="samples/sample-meeting.txt" download>下载示例转写稿</a>
-    </div>
-    <div class="row">
-      <button data-need-dir id="slowBtn">慢速写入示例录音</button>
-      <button data-need-dir id="txtBtn">写入转写稿（.txt，快）</button>
-    </div>
-    <div class="row">
-      <button data-need-dir id="dupBtn">再写一份相同内容</button>
-      <button data-need-dir id="badBtn">写入一个 PDF</button>
-    </div>
-    <div class="row">
-      <button data-need-dir id="recBtn">● 录一段音并保存</button>
-    </div>
-    <p class="small" style="margin:0">“慢速写入”分 6 段、约 5 秒写完，用来验证 Incomplete File；“再写一份相同内容”验证 Duplicate Event；PDF 会被类型检查拦下。</p>
-  </section>
+  <aside class="side">
+    <section class="panel coach" aria-live="polite">
+      <div class="eyebrow">下一步</div>
+      <div data-show="1" class="stack"><h2>先说一句话</h2><p>在左边的输入框里描述你想要的自动化，直接点“发送”也行，已经帮你填好了一句。</p></div>
+      <div data-show="2" class="stack"><h2>检查卡片，再授权</h2><p>卡片上写明了 Kimi 何时触发、能读什么、能写什么。确认后浏览器会让你选一个文件夹，建议新建一个空的，比如“会议录音”。</p></div>
+      <div data-show="3 4" class="stack">
+        <h2 id="coachTitle">往文件夹里存一段录音</h2>
+        <p id="coachText"></p>
+        <div id="tools" class="stack">
+          <button class="primary" data-act="sample" data-need-dir>存入示例录音<small>50 秒 · 两人对话</small></button>
+          <button data-act="txt" data-need-dir>存入一份文字稿<small>不用转写 · 1 秒出结果</small></button>
+          <button data-act="rec" id="recBtn" data-need-dir>● 自己录一段再存入</button>
+          <a class="btn" href="samples/sample-meeting.m4a" download>下载示例录音，自己拖进文件夹</a>
+        </div>
+        <div id="dropZone" class="drop hidden">把录音或 .txt 拖到这里</div>
+        <p class="small">首次转写录音要下载约 77 MB 的语音模型，之后会缓存。</p>
+        <aside class="pmnote"><b>设计说明</b>这一栏是演示工具，真实产品里没有：用户只是照常把录音存进文件夹。按钮做的也是磁盘上的真实写入。</aside>
+      </div>
+    </section>
 
-  <section class="panel" aria-labelledby="h-set">
-    <div class="panel-head"><h2 id="h-set">模型与故障设置</h2><span class="step">Step 3 · Execute</span></div>
+    <section class="panel">
+      <div class="eyebrow">出错的时候会怎样</div>
+      <h2>边界情况 <span class="small" id="checkCount"></span></h2>
+      <div class="meter"><i id="checkBar"></i></div>
+      <div class="stack" id="checks"></div>
+    </section>
+  </aside>
+</div>
+
+<details class="panel devlog">
+  <summary>幕后日志（开发者视图）</summary>
+  <div class="log" id="log"></div>
+  <div><button class="chip" data-act="clearSeen">清空去重记录</button></div>
+</details>
+
+<footer>Case 2 · Kimi 事件触发自动化 · MVP Demo。音频在浏览器本地转写；只有填了 Kimi API Key 时，转写文字才会发给 Kimi 生成纪要。</footer>
+</div>
+
+<dialog id="settings">
+  <form method="dialog">
+    <h2 style="font-family:var(--f-display)">纪要引擎与高级设置</h2>
     <label>Kimi API Key（可选，只保存在本页内存，刷新即清空）
       <input id="key" type="password" autocomplete="off" placeholder="sk-…  不填则用离线规则生成纪要">
     </label>
     <div class="row">
-      <label style="flex:1 1 140px">接口
-        <select id="base"><option value="https://api.moonshot.cn/v1">api.moonshot.cn</option><option value="https://api.moonshot.ai/v1">api.moonshot.ai</option></select>
-      </label>
-      <label style="flex:1 1 160px">模型
-        <select id="model"><option>kimi-k2-turbo-preview</option><option>moonshot-v1-8k</option></select>
-      </label>
+      <label>接口<select id="base"><option value="https://api.moonshot.cn/v1">api.moonshot.cn</option><option value="https://api.moonshot.ai/v1">api.moonshot.ai</option></select></label>
+      <label>模型<select id="model"><option>kimi-k2-turbo-preview</option><option>moonshot-v1-8k</option></select></label>
     </div>
-    <button id="testKey">测试连接并读取模型列表</button>
-    <label>语音转写模型（浏览器本地运行，首次需下载）
+    <button type="button" data-act="testKey">测试连接并读取模型列表</button>
+    <label>语音转写模型（浏览器本地运行）
       <select id="asrModel">
         <option value="onnx-community/whisper-base">Whisper base（约 77 MB，更准）</option>
         <option value="onnx-community/whisper-tiny">Whisper tiny（约 41 MB，更快）</option>
       </select>
     </label>
-    <label>模拟故障：接下来 N 次模型调用强制失败
-      <div class="row"><input id="failN" type="number" min="0" max="6" value="0" style="flex:0 0 90px"><span class="small">0 = 不注入。2 = 失败两次后第三次成功；3 及以上 = 三次都失败，进入失败处理。</span></div>
-    </label>
-    <label>写入完成判定：文件大小连续不变的秒数
+    <label>文件大小连续多少秒不变，才算写完
       <input id="settle" type="number" min="1" max="10" value="2">
     </label>
-  </section>
-</div>
-
-<!-- 右栏：运行态 -->
-<div class="col">
-  <section class="panel" aria-labelledby="h-watch">
-    <div class="panel-head"><h2 id="h-watch">Desktop Harness</h2><span id="modeBadge" class="badge">未启用</span></div>
-    <div class="status"><span id="watchDot" class="dot"></span><span id="watchText">还没有开始监听。先在左边生成 Automation Card 并确认。</span></div>
-    <div id="dropZone" class="drop hidden">当前浏览器不支持直接读写本地文件夹。<br>回退模式：把录音或 .txt 拖到这里（这只是模拟，真实文件写入请用桌面版 Chrome / Edge）。</div>
-  </section>
-
-  <section class="panel" aria-labelledby="h-pipe">
-    <div class="panel-head"><h2 id="h-pipe">当前事件的处理链路</h2><span id="pipeFile" class="badge">等待事件</span></div>
-    <ol class="pipe" id="pipe"></ol>
-    <div id="asrProg" class="hidden"><div class="small" id="asrProgText"></div><div class="prog"><i id="asrBar"></i></div></div>
-    <div class="row hidden" id="resumeRow"><button id="resumeBtn" class="primary">从断点重试</button><span class="small">转写结果已缓存，只会重跑失败的那一步。</span></div>
-  </section>
-
-  <section class="panel" aria-labelledby="h-val">
-    <div class="panel-head"><h2 id="h-val">验证清单</h2><span class="step">Step 5 · Validate</span></div>
-    <div class="checks" id="checks"></div>
-  </section>
-
-  <section class="panel" aria-labelledby="h-runs">
-    <div class="panel-head"><h2 id="h-runs">执行记录与产物</h2><span class="step">Step 4 · Deliver</span></div>
-    <div class="runs" id="runs"><p class="small" style="margin:0">还没有执行记录。</p></div>
-    <div id="detail" class="hidden" style="display:grid;gap:10px">
-      <div class="tabs" id="tabs" role="tablist"></div>
-      <div id="tabBody"></div>
-    </div>
-  </section>
-
-  <section class="panel" aria-labelledby="h-log">
-    <div class="panel-head"><h2 id="h-log">事件日志</h2><button id="clearSeen" class="small">清空去重记录</button></div>
-    <div class="log" id="log" aria-live="polite"></div>
-  </section>
-</div>
-</div>
-
-<footer>Case 2 · Kimi 事件触发自动化 · MVP Demo。音频在浏览器本地转写；只有填了 Kimi API Key 时，转写文字才会发给 Kimi 生成纪要。<a href="overview.html">查看静态说明页</a></footer>
-</div>
+    <input id="failN" type="hidden" value="0">
+    <button class="primary">完成</button>
+  </form>
+</dialog>
 
 <div class="toast" id="toast" role="status"></div>
+<div id="asrProg" class="hidden"><div class="small" id="asrProgText"></div><div class="meter"><i id="asrBar"></i></div></div>
 
 <script type="module">
 const $ = s => document.querySelector(s);
@@ -262,55 +337,12 @@ const fmtSize = n => n < 1024 ? n + " B" : n < 1048576 ? (n / 1024).toFixed(1) +
 const uid = () => Math.random().toString(36).slice(2, 10);
 const OUT_DIR = "Kimi纪要";
 const POLL_MS = 1000;
-
-const S = {
-  automation: null, dir: null, fallback: false, watching: false, observer: null, timer: null, scanning: false,
-  known: new Map(), tempSeen: new Set(), runs: [], selected: null, tab: "minutes",
-  queue: Promise.resolve(), asr: null, asrName: null, lastSample: null, recorder: null,
-  seen: loadSeen(),
-};
-const checks = {
-  normal: { title: "正常执行", desc: "一次真实文件写入，走完检测 → 转写 → 生成 → 交付。", ev: null },
-  dup: { title: "Duplicate Event", desc: "同一内容再次保存，不重复生成纪要。", ev: null },
-  incomplete: { title: "Incomplete File", desc: "文件还在写入时不提前处理。", ev: null },
-  failure: { title: "Execution Failure", desc: "模型调用失败后有限重试；无法恢复时保留状态并通知。", ev: null },
-};
-
-/* ---------- 基础：日志、提示、存储 ---------- */
-function log(level, msg) {
-  const el = $("#log");
-  const line = document.createElement("div");
-  line.innerHTML = `<span class="t">${hms()}</span> <span class="${level}">${esc(msg)}</span>`;
-  el.appendChild(line);
-  el.scrollTop = el.scrollHeight;
-  const run = S.current; if (run) run.log.push(`${hms()} ${msg}`);
-}
-function toast(msg, bad = false) {
-  const t = $("#toast");
-  t.textContent = msg; t.className = "toast show" + (bad ? " bad" : "");
-  clearTimeout(toast.h); toast.h = setTimeout(() => t.className = "toast", 6000);
-}
 function loadSeen() {
   try { return new Map(JSON.parse(localStorage.getItem("kimi-demo-seen") || "[]")); } catch { return new Map(); }
 }
 function saveSeen() {
   try { localStorage.setItem("kimi-demo-seen", JSON.stringify([...S.seen])); } catch {}
 }
-
-/* ---------- 浏览器能力检测 ---------- */
-const hasFS = "showDirectoryPicker" in window;
-const hasObserver = "FileSystemObserver" in window;
-function renderSupport() {
-  const s = $("#support");
-  if (hasFS) {
-    s.innerHTML = `当前浏览器支持读写本地文件夹${hasObserver ? "，并支持 FileSystemObserver 事件推送" : "（用 1 秒轮询检测变化）"}。文件只在你的电脑上处理；纪要写回你选的文件夹里的 <code>${OUT_DIR}/</code> 子目录。`;
-  } else {
-    s.className = "notice warn";
-    s.innerHTML = "当前浏览器不支持读写本地文件夹（Safari、Firefox、手机浏览器都不支持）。要体验真实文件写入触发，请用电脑上的 Chrome 或 Edge 打开；这里只能用拖拽回退模式。";
-  }
-}
-
-/* ---------- Step 1：自然语言 → Automation Card ---------- */
 const DEFAULT_PROMPT = `你是会议纪要助手。根据【会议转写】生成结构化会议纪要：
 1. summary：3–5 句话概括会议内容；
 2. decisions：会上明确做出的决策，逐条列出；
@@ -342,146 +374,9 @@ async function kimiParse(text) {
   const base = ruleParse(text);
   return { ...base, name: j.name || base.name, folder_hint: j.folder_hint || base.folder_hint, trigger: j.trigger || base.trigger, actions: Array.isArray(j.actions) && j.actions.length ? j.actions : base.actions };
 }
-
-$("#parseBtn").onclick = async () => {
-  const text = $("#instr").value.trim();
-  if (!text) return;
-  const btn = $("#parseBtn"); btn.disabled = true; btn.textContent = "解析中…";
-  let a, by;
-  if (key()) {
-    try { a = await kimiParse(text); by = `由 Kimi（${$("#model").value}）解析`; }
-    catch (e) { a = ruleParse(text); by = `Kimi 解析失败（${e.message.slice(0, 60)}），已用规则解析`; }
-  } else { a = ruleParse(text); by = "由本地规则解析；填入 Kimi Key 后改由模型解析"; }
-  S.automation = { id: "auto_" + uid(), instruction: text, ...a };
-  renderCard(by);
-  log("info", `生成 Automation Card：${a.name}`);
-  btn.disabled = false; btn.textContent = "重新生成 Automation Card";
-};
-
-function renderCard(by) {
-  const a = S.automation;
-  $("#card").classList.remove("hidden");
-  $("#cardSay").textContent = `“${a.instruction}”`;
-  $("#cardTrigger").textContent = `${a.trigger}；类型 ${a.file_types.join(" / ")}`;
-  $("#cardAction").textContent = a.actions.join(" → ");
-  $("#cardPerm").textContent = a.permissions.join("；");
-  $("#cardDeliver").textContent = a.delivery.join(" + ");
-  $("#cardPrompt").textContent = a.saved_prompt;
-  $("#cardBy").textContent = by;
-  $("#cardPath").textContent = S.dir ? S.dir.name + "/" : `确认后选择文件夹（建议：${a.folder_hint}）`;
-}
-
-/* ---------- 启用：选择文件夹，建立基线，开始监听 ---------- */
-$("#enableBtn").onclick = async () => {
-  if (!S.automation) return;
-  if (!hasFS) { enableFallback(); return; }
-  let dir;
-  try {
-    // ?opfs：自动化测试用，改用浏览器沙盒文件夹（OPFS），接口与真实文件夹相同
-    dir = new URLSearchParams(location.search).has("opfs")
-      ? await (await navigator.storage.getDirectory()).getDirectoryHandle("会议录音", { create: true })
-      : await window.showDirectoryPicker({ id: "kimi-demo", mode: "readwrite" });
-  }
-  catch (e) { if (e.name !== "AbortError") log("bad", "选择文件夹失败：" + e.message); return; }
-  S.dir = dir;
-  if ("Notification" in window && Notification.permission === "default") { try { await Notification.requestPermission(); } catch {} }
-  S.known.clear(); S.tempSeen.clear();
-  let n = 0;
-  for await (const [name, h] of dir.entries()) {
-    if (h.kind !== "file" || isTemp(name)) continue;
-    try { const f = await h.getFile(); S.known.set(name, { sig: f.size + ":" + f.lastModified, state: "baseline", sizes: [f.size] }); n++; } catch {}
-  }
-  log("info", `开始监听「${dir.name}/」。已有 ${n} 个文件记为基线，不会触发；只处理之后新出现或重新保存的文件。`);
-  log("dim", `输出写入 ${OUT_DIR}/ 子目录；监听只看顶层文件，所以自己的产物不会再次触发自己。`);
-  startWatching();
-};
-
-function startWatching() {
-  S.watching = true;
-  clearInterval(S.timer);
-  S.timer = setInterval(scan, POLL_MS);
-  let mode = "轮询 1s";
-  if (hasObserver && S.dir) {
-    try {
-      S.observer = new FileSystemObserver(() => scan());
-      S.observer.observe(S.dir);
-      mode = "FileSystemObserver + 轮询兜底";
-    } catch (e) { log("dim", "FileSystemObserver 不可用，改用轮询：" + e.message); }
-  }
-  $("#modeBadge").textContent = mode; $("#modeBadge").className = "badge live";
-  $("#watchDot").className = "dot on";
-  $("#watchText").textContent = `监听中：${S.dir ? S.dir.name + "/" : "拖拽回退模式"}`;
-  $("#cardBadge").textContent = "监听中"; $("#cardBadge").className = "badge ok";
-  $("#cardPath").textContent = S.dir ? S.dir.name + "/" : "拖拽回退模式";
-  $("#enableBtn").textContent = "换一个文件夹";
-  $("#stopBtn").classList.remove("hidden");
-  document.querySelectorAll("[data-need-dir]").forEach(b => b.disabled = !S.dir);
-}
-
-$("#stopBtn").onclick = () => {
-  S.watching = false; clearInterval(S.timer);
-  try { S.observer?.disconnect(); } catch {}
-  $("#watchDot").className = "dot"; $("#watchText").textContent = "已停止监听。";
-  $("#modeBadge").textContent = "已停止"; $("#modeBadge").className = "badge";
-  $("#cardBadge").textContent = "已暂停"; $("#cardBadge").className = "badge warn";
-  $("#stopBtn").classList.add("hidden");
-  log("info", "已停止监听");
-};
-
-/* ---------- Step 2：检测、等待写入完成 ---------- */
 function isTemp(name) {
   return name.startsWith(".") || name.startsWith("~$") || /\.(crswap|part|download|tmp|crdownload)$/i.test(name);
 }
-
-async function scan() {
-  if (!S.watching || !S.dir || S.scanning) return;
-  S.scanning = true;
-  try {
-    const present = new Set();
-    const settleTicks = Math.max(1, Number($("#settle").value) || 2) * 1000 / POLL_MS;
-    for await (const [name, h] of S.dir.entries()) {
-      if (h.kind !== "file") continue;
-      present.add(name);
-      if (isTemp(name)) {
-        if (!S.tempSeen.has(name)) { S.tempSeen.add(name); log("dim", `忽略临时文件 ${name}（写入中的交换文件）`); }
-        continue;
-      }
-      let f; try { f = await h.getFile(); } catch { continue; }
-      const sig = f.size + ":" + f.lastModified;
-      const k = S.known.get(name);
-      if (!k) {
-        S.known.set(name, { sig, state: "settling", stable: 0, sizes: [f.size], first: Date.now(), grew: false, handle: h });
-        log("info", `检测到新文件 ${name}（${fmtSize(f.size)}），等待写入完成…`);
-        showPending(name);
-        continue;
-      }
-      if (k.state === "settling") {
-        if (k.sig !== sig) {
-          k.sig = sig; k.stable = 0; k.sizes.push(f.size); k.grew = true;
-          log("warn", `${name} 仍在写入：${fmtSize(f.size)}，暂不处理`);
-          showPending(name, k);
-        } else if (++k.stable >= settleTicks) {
-          k.state = "queued"; k.handle = h;
-          log("info", `${name} 大小已连续 ${settleTicks * POLL_MS / 1000}s 不变，判定写入完成`);
-          enqueue(name, k);
-        }
-      } else if (k.sig !== sig && ["baseline", "done", "skipped", "failed", "duplicate"].includes(k.state)) {
-        S.known.set(name, { sig, state: "settling", stable: 0, sizes: [f.size], first: Date.now(), grew: false, handle: h });
-        log("info", `${name} 被重新保存，重新进入检测`);
-      }
-    }
-    for (const n of [...S.known.keys()]) if (!present.has(n)) S.known.delete(n);
-    for (const n of [...S.tempSeen]) if (!present.has(n)) S.tempSeen.delete(n);
-  } catch (e) {
-    log("bad", "扫描失败：" + e.message);
-  } finally { S.scanning = false; }
-}
-
-function enqueue(name, k) {
-  S.queue = S.queue.then(() => processEvent(name, k)).catch(e => log("bad", "处理异常：" + e.message));
-}
-
-/* ---------- 类型检查（扩展名 + 文件头） ---------- */
 async function sniff(file) {
   const ext = (file.name.match(/\.([^.]+)$/) || [])[1]?.toLowerCase() || "";
   const allowed = ["m4a", "mp3", "wav", "webm", "ogg", "aac", "txt"];
@@ -499,145 +394,6 @@ async function sniff(file) {
   if (!mime) return { ok: false, reason: `扩展名是 .${ext}，但文件头不像音频` };
   return { ok: true, kind: "audio", mime, ext };
 }
-
-/* ---------- 处理链路 ---------- */
-const STAGES = [
-  ["detect", "检测"], ["settle", "写入完成"], ["type", "类型检查"], ["hash", "Hash 去重"],
-  ["payload", "Event Payload"], ["transcribe", "转写"], ["context", "组装 Context"], ["agent", "Agent 生成"], ["deliver", "交付"],
-];
-const ICON = { idle: "·", active: "▶", done: "✓", skip: "–", fail: "✕" };
-
-function newRun(name) {
-  const run = { id: "run_" + uid(), name, state: "running", startedAt: now(), stages: {}, log: [], attempts: [] };
-  for (const [k] of STAGES) run.stages[k] = { st: "idle", dt: "", ms: null };
-  S.runs.unshift(run); S.current = run; S.selected = run.id;
-  return run;
-}
-function stage(run, k, st, dt, ms) {
-  const s = run.stages[k]; s.st = st; if (dt !== undefined) s.dt = dt; if (ms !== undefined) s.ms = ms;
-  if (st === "active") s.t0 = performance.now();
-  if ((st === "done" || st === "fail" || st === "skip") && s.t0 && ms === undefined) s.ms = Math.round(performance.now() - s.t0);
-  renderPipe(run); renderRuns();
-}
-function showPending(name, k) {
-  $("#pipeFile").textContent = name; $("#pipeFile").className = "badge live";
-  const sizes = k ? k.sizes.map(fmtSize).join(" → ") : "";
-  $("#pipe").innerHTML = STAGES.map(([key, nm], i) => {
-    const st = i === 0 ? "done" : i === 1 ? "active" : "idle";
-    const dt = i === 0 ? "File System Watcher 发现新文件" : i === 1 ? (k ? `仍在写入：${sizes}` : "等待文件大小稳定") : "";
-    return `<li class="${st}"><span class="ic">${ICON[st]}</span><span class="nm">${nm}</span><span class="dt">${esc(dt)}</span><span class="ms"></span></li>`;
-  }).join("");
-  $("#resumeRow").classList.add("hidden");
-}
-function renderPipe(run) {
-  if (S.current !== run && S.selected !== run.id) return;
-  $("#pipeFile").textContent = run.name;
-  $("#pipeFile").className = "badge " + ({ done: "ok", failed: "bad", duplicate: "warn", skipped: "warn" }[run.state] || "live");
-  $("#pipe").innerHTML = STAGES.map(([k, nm]) => {
-    const s = run.stages[k];
-    return `<li class="${s.st}"><span class="ic">${ICON[s.st]}</span><span class="nm">${nm}</span><span class="dt">${esc(s.dt)}</span><span class="ms">${s.ms != null ? s.ms + "ms" : ""}</span></li>`;
-  }).join("");
-  $("#resumeRow").classList.toggle("hidden", run.state !== "failed");
-}
-
-async function processEvent(name, k, droppedFile) {
-  const run = newRun(name);
-  const waited = k ? Date.now() - k.first : 0;
-  stage(run, "detect", "done", droppedFile ? "拖拽回退模式收到文件" : `Watcher 在 ${hms(new Date(k.first))} 发现`, 0);
-  stage(run, "settle", "done", k && k.grew ? `观察到 ${k.sizes.length - 1} 次增长（${k.sizes.map(fmtSize).join(" → ")}），稳定后才处理` : "大小未变化，稳定后处理", waited);
-  log("info", `▶ 开始处理 ${name}`);
-  if (k && k.grew) pass("incomplete", `${name}：写入期间大小变化 ${k.sizes.length - 1} 次（${k.sizes.map(fmtSize).join(" → ")}），等稳定 ${$("#settle").value}s 后才开始处理。`);
-
-  let file;
-  try { file = droppedFile || await k.handle.getFile(); }
-  catch (e) { return finishFail(run, k, "detect", "读取文件失败：" + e.message); }
-
-  stage(run, "type", "active");
-  const t = await sniff(file);
-  if (!t.ok) {
-    stage(run, "type", "skip", t.reason); run.state = "skipped"; if (k) k.state = "skipped";
-    log("warn", `跳过 ${name}：${t.reason}`); renderAll(); S.current = null; return;
-  }
-  stage(run, "type", "done", `${t.kind === "audio" ? "音频" : "转写稿"} · ${t.mime} · ${fmtSize(file.size)}`);
-
-  stage(run, "hash", "active");
-  const buf = await file.arrayBuffer();
-  const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", buf))].map(x => x.toString(16).padStart(2, "0")).join("");
-  run.sha = sha;
-  if (S.seen.has(sha)) {
-    const first = S.seen.get(sha);
-    stage(run, "hash", "skip", `sha256 ${sha.slice(0, 12)}… 与「${first}」内容相同，不重复生成`);
-    run.state = "duplicate"; if (k) k.state = "duplicate";
-    log("warn", `重复事件：${name} 与 ${first} 内容相同，已跳过`);
-    pass("dup", `${name} 的 sha256 与「${first}」相同，跳过处理，没有生成第二份纪要。`);
-    renderAll(); S.current = null; return;
-  }
-  S.seen.set(sha, name); saveSeen();
-  stage(run, "hash", "done", `sha256 ${sha.slice(0, 12)}…（首次出现，已登记）`);
-
-  stage(run, "payload", "active");
-  run.payload = {
-    event_id: "evt_" + uid(), type: "file.created", source: droppedFile ? "web.drop_fallback" : "desktop.fs_watcher",
-    automation_id: S.automation.id,
-    file: { path: `${S.dir ? S.dir.name : "drop"}/${name}`, name, size: file.size, mime: t.mime, sha256: sha, last_modified: new Date(file.lastModified).toISOString() },
-    detected_at: new Date(k ? k.first : Date.now()).toISOString(), settled_at: new Date().toISOString(),
-  };
-  stage(run, "payload", "done", `${run.payload.event_id} · ${run.payload.type}`);
-  run.kind = t.kind; run.buf = buf; run.mime = t.mime; run.k = k;
-  await runFrom(run);
-}
-
-async function runFrom(run) {
-  S.current = run; run.state = "running"; renderAll();
-  try {
-    if (run.transcript == null) {
-      stage(run, "transcribe", "active", run.kind === "text" ? "读取转写稿" : "解码音频…");
-      run.transcript = run.kind === "text" ? new TextDecoder().decode(run.buf) : await transcribe(run);
-      stage(run, "transcribe", "done", `${run.transcript.length} 字${run.kind === "audio" ? " · " + S.asrName.split("/")[1] : ""}`);
-    }
-    stage(run, "context", "active");
-    run.context = assemble(run);
-    stage(run, "context", "done", `约 ${run.context.tokens} tokens；只注入事件、Saved Prompt 和这份转写`);
-
-    stage(run, "agent", "active", key() ? `调用 Kimi ${$("#model").value}` : "离线规则生成（未填 Kimi Key）");
-    run.minutes = await withRetry(run, () => key() ? kimiMinutes(run) : ruleMinutes(run.transcript));
-    stage(run, "agent", "done", `${run.minutes.decisions.length} 项决策 · ${run.minutes.action_items.length} 个待办${run.attempts.length ? ` · 重试 ${run.attempts.length} 次后成功` : ""}`);
-    if (run.attempts.length) pass("failure", `${run.name}：前 ${run.attempts.length} 次模型调用失败（${run.attempts.map(a => a.error).join("；")}），按 1s/2s 退避重试后成功。`);
-
-    stage(run, "deliver", "active");
-    const where = await deliver(run);
-    stage(run, "deliver", "done", where);
-    run.state = "done"; if (run.k) run.k.state = "done";
-    log("ok", `✓ ${run.name} 处理完成`);
-    pass("normal", `${run.name}：从${run.payload.source === "desktop.fs_watcher" ? "真实文件写入" : "拖拽"}到交付共 ${((Date.now() - run.startedAt) / 1000).toFixed(1)}s，产物：${where}。`);
-  } catch (e) {
-    const st = Object.entries(run.stages).find(([, s]) => s.st === "active")?.[0] || "agent";
-    await finishFail(run, run.k, st, e.message);
-  }
-  S.current = null; renderAll();
-}
-
-async function finishFail(run, k, st, msg) {
-  stage(run, st, "fail", msg);
-  run.state = "failed"; run.error = msg; if (k) k.state = "failed";
-  run.checkpoint = st;
-  log("bad", `✕ ${run.name} 失败于「${STAGES.find(s => s[0] === st)[1]}」：${msg}。状态已保存，可从断点重试。`);
-  await writeLog(run).catch(() => {});
-  notify("会议纪要生成失败", `${run.name}：${msg.slice(0, 60)}。打开页面可从断点重试。`, run, true);
-  if (run.attempts.length >= 3) pass("failure", `${run.name}：3 次模型调用均失败，停止重试；转写结果和断点已保存，发出失败通知，可点“从断点重试”。`);
-  S.current = null; renderAll();
-}
-
-$("#resumeBtn").onclick = () => {
-  const run = S.runs.find(r => r.id === S.selected);
-  if (!run || run.state !== "failed") return;
-  run.attempts = []; run.error = null;
-  for (const [k] of STAGES) if (run.stages[k].st === "fail") run.stages[k] = { st: "idle", dt: "", ms: null };
-  log("info", `从断点重试 ${run.name}（转写${run.transcript != null ? "已缓存，跳过" : "未完成，重新开始"}）`);
-  S.queue = S.queue.then(() => runFrom(run));
-};
-
-/* ---------- Step 3：转写（浏览器本地 Whisper） ---------- */
 async function getASR() {
   const name = $("#asrModel").value;
   if (S.asr && S.asrName === name) return S.asr;
@@ -719,8 +475,6 @@ async function toSimplified(s) {
     return t2s(s);
   } catch { return s; }
 }
-
-/* ---------- Context 组装 ---------- */
 function assemble(run) {
   const p = run.payload;
   const user = `【触发事件】\n${JSON.stringify({ type: p.type, file: p.file.name, size: p.file.size, detected_at: p.detected_at }, null, 0)}\n\n【会议转写】\n${run.transcript}`;
@@ -811,8 +565,6 @@ async function withRetry(run, fn) {
     }
   }
 }
-
-/* ---------- Step 4：交付 ---------- */
 function minutesMd(run) {
   const m = run.minutes;
   return `# 会议纪要：${run.name}
@@ -846,7 +598,409 @@ async function writeLog(run) {
   const w = await fh.createWritable();
   await w.write(old + JSON.stringify(rec) + "\n"); await w.close();
 }
+async function writeFile(name, data, { chunks = 1, gap = 0 } = {}) {
+  const fh = await S.dir.getFileHandle(name, { create: true });
+  const bytes = new Uint8Array(data);
+  const size = Math.ceil(bytes.length / chunks);
+  for (let i = 0; i < chunks; i++) {
+    const w = await fh.createWritable({ keepExistingData: i > 0 });
+    await w.seek(i * size); await w.write(bytes.slice(i * size, (i + 1) * size)); await w.close();
+    if (gap && i < chunks - 1) await sleep(gap);
+  }
+}
+const stamp = () => hms().replace(/:/g, "");
 
+/* ================= 状态 ================= */
+const S = {
+  automation: null, cardBy: "", dir: null, fallback: false, watching: false, observer: null, timer: null, scanning: false,
+  known: new Map(), tempSeen: new Set(), runs: [], current: null,
+  queue: Promise.resolve(), asr: null, asrName: null, sample: null, recorder: null, baseline: 0,
+  seen: loadSeen(),
+};
+const hasFS = "showDirectoryPicker" in window;
+const hasObserver = "FileSystemObserver" in window;
+const checks = {
+  normal: { title: "正常存入一段录音", expect: "自动出纪要，并通知你", ev: null, acts: [] },
+  incomplete: { title: "录音还没写完", expect: "等写完再处理，不读半截文件", ev: null, acts: [["slow", "试一下"]] },
+  dup: { title: "同一份录音存了两次", expect: "不重复生成纪要", ev: null, acts: [["dup", "试一下"]] },
+  wrongtype: { title: "存进来的不是录音", expect: "安静跳过，不打扰你", ev: null, acts: [["pdf", "试一下"]] },
+  failure: { title: "模型服务出故障", expect: "自动重试，最多 3 次；仍失败就保留进度并通知你", ev: null, acts: [["fail2", "失败 2 次后恢复"], ["fail3", "连续失败 3 次"]] },
+};
+const note = t => `<aside class="pmnote"><b>设计说明</b>${t}</aside>`;
+
+/* ================= 日志与提示 ================= */
+function log(level, msg) {
+  const el = $("#log");
+  const line = document.createElement("div");
+  line.innerHTML = `<span class="t">${hms()}</span> <span class="${level}">${esc(msg)}</span>`;
+  el.appendChild(line); el.scrollTop = el.scrollHeight;
+  if (S.current) S.current.log.push(`${hms()} ${msg}`);
+}
+function toast(title, body = "", bad = false) {
+  const t = $("#toast");
+  t.innerHTML = `<b>${esc(title)}</b>${esc(body)}`; t.className = "toast show" + (bad ? " bad" : "");
+  clearTimeout(toast.h); toast.h = setTimeout(() => t.className = "toast", 6000);
+}
+
+/* ================= 对话 ================= */
+function addMsg(html, { user = false, id } = {}) {
+  const el = document.createElement("div");
+  el.className = "msg " + (user ? "user" : "kimi"); if (id) el.id = id;
+  el.innerHTML = user ? `<div class="bub">${html}</div>` : `<div class="av" aria-hidden="true">K</div><div class="bub">${html}</div>`;
+  $("#thread").appendChild(el);
+  el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  return el;
+}
+const say = (html, opt) => addMsg(html, opt);
+
+async function send() {
+  const text = $("#instr").value.trim();
+  if (!text) return;
+  addMsg(esc(text), { user: true });
+  $("#instr").value = ""; $("#sendBtn").disabled = true;
+  const typing = say(`<span class="typing" aria-label="Kimi 正在理解"><i></i><i></i><i></i></span>`);
+  let a, by;
+  if (key()) {
+    try { a = await kimiParse(text); by = `由 Kimi（${$("#model").value}）理解这句话`; }
+    catch (e) { a = ruleParse(text); by = `Kimi 解析失败（${e.message.slice(0, 60)}），已改用本地规则`; }
+  } else { await sleep(500); a = ruleParse(text); by = "这句话由本地规则解析；接入 Kimi 后由模型理解"; }
+  typing.remove();
+  S.automation = { id: "auto_" + uid(), instruction: text, ...a }; S.cardBy = by;
+  log("info", `生成 Automation Card：${a.name}`);
+  renderCard(); renderFlow();
+  $("#sendBtn").disabled = false;
+}
+
+function renderCard() {
+  const a = S.automation; if (!a) return;
+  const state = S.watching ? ["运行中", "ok"] : (S.dir || S.fallback) ? ["已暂停", "warn"] : ["待你确认", "warn"];
+  const where = S.dir ? `<code>${esc(S.dir.name)}/</code>` : S.fallback ? "拖拽回退模式" : `确认后由你选择（建议叫“${esc(a.folder_hint)}”）`;
+  const html = `<p>${S.dir || S.fallback ? "这条自动化已经生效：" : "我理解的是这样。你确认之前，我什么都不会做："}</p>
+  <div class="acard">
+    <div class="acard-top"><h3>${esc(a.name)}</h3><span class="badge ${state[1]}">${state[0]}</span></div>
+    <dl>
+      <dt>监听哪里</dt><dd>${where}</dd>
+      <dt>何时触发</dt><dd>${esc(a.trigger)}<div class="small">${a.file_types.join(" ")}</div></dd>
+      <dt>做什么</dt><dd>${a.actions.map(esc).join(" → ")}</dd>
+      <dt>权限</dt><dd><ul class="perm">
+        <li>读取这个文件夹顶层的文件</li><li>只在 <code>${OUT_DIR}/</code> 子目录写入结果</li>
+        <li class="no">不修改、不删除你的原文件</li><li class="no">不读取其他文件夹、聊天记录</li>
+        <li class="no">${key() ? "录音不出本机，只把转写文字发给 Kimi" : "录音不出本机，在浏览器里转写"}</li></ul></dd>
+      <dt>怎么告诉你</dt><dd>${a.delivery.map(esc).join(" + ")}</dd>
+    </dl>
+    <details><summary>每次触发时交给模型的指令（Saved Prompt）</summary><pre>${esc(a.saved_prompt)}</pre></details>
+    ${S.dir || S.fallback ? "" : `<div class="acard-foot"><button class="primary" data-act="enable">确认，并选择要监听的文件夹</button><button class="ghost" data-act="edit">改一下</button></div>`}
+  </div>
+  <div class="small">${esc(S.cardBy)}</div>
+  ${note("自然语言有歧义，所以先把它翻译成一张可检查的卡片：触发条件、动作、权限、交付方式逐项列出，用户确认前不产生任何副作用。权限写成“能做 / 不做”两类，比一句“需要访问文件夹”更容易建立信任。")}`;
+  const old = document.getElementById("cardMsg");
+  if (old) old.querySelector(".bub").innerHTML = html; else say(html, { id: "cardMsg" });
+}
+
+/* ================= 流程状态 ================= */
+function step() {
+  if (!S.automation) return 1;
+  if (!S.dir && !S.fallback) return 2;
+  return S.runs.some(r => r.state === "done") ? 4 : 3;
+}
+function renderFlow() {
+  const st = step();
+  [...$("#stepper").children].forEach((li, i) => { li.className = i + 1 < st ? "done" : i + 1 === st ? "on" : ""; if (i + 1 === st) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current"); });
+  document.querySelectorAll("[data-show]").forEach(el => el.classList.toggle("hidden", !el.dataset.show.split(" ").includes(String(st))));
+  $("#composer").classList.toggle("hidden", st >= 3);
+  const dirName = S.dir ? S.dir.name + "/" : "";
+  $("#coachTitle").textContent = st === 4 ? "主流程跑通了" : S.fallback ? "把一段录音拖进来" : "往文件夹里存一段录音";
+  $("#coachText").textContent = st === 4 ? "可以再存一段自己的录音，或者试试下面几种容易出错的情况。"
+    : S.fallback ? "当前浏览器不能监听本地文件夹，只能用拖拽代替。"
+    : `在访达里把录音拖进「${dirName}」就行；手边没有录音，可以用下面的按钮代劳。`;
+  $("#tools").classList.toggle("hidden", S.fallback);
+  $("#dropZone").classList.toggle("hidden", !S.fallback);
+  document.querySelectorAll("[data-need-dir]").forEach(b => b.disabled = !S.dir || !S.watching);
+  $("#liveBar").classList.toggle("hidden", st < 3);
+  $("#watchDot").className = "dot" + (S.watching ? " on" : "");
+  $("#watchText").textContent = S.fallback ? "拖拽回退模式" : S.watching ? `正在监听 ${dirName}` : `已暂停 ${dirName}`;
+  $("#pauseBtn").textContent = S.watching ? "暂停" : "继续";
+  $("#pauseBtn").classList.toggle("hidden", S.fallback);
+  $("#engineChip").textContent = key() ? `纪要引擎：Kimi ${$("#model").value}` : "纪要引擎：离线规则 · 接入 Kimi";
+  renderChecks();
+}
+
+/* ================= 授权文件夹，开始监听 ================= */
+async function enable() {
+  if (!S.automation) return;
+  if (!hasFS) { enableFallback(); return; }
+  let dir;
+  try {
+    // ?opfs：自动化测试用，改用浏览器沙盒文件夹（OPFS），接口与真实文件夹相同
+    dir = new URLSearchParams(location.search).has("opfs")
+      ? await (await navigator.storage.getDirectory()).getDirectoryHandle("会议录音", { create: true })
+      : await window.showDirectoryPicker({ id: "kimi-demo", mode: "readwrite" });
+  } catch (e) { if (e.name !== "AbortError") { log("bad", "选择文件夹失败：" + e.message); toast("没能打开文件夹", e.message, true); } return; }
+  stopWatching();
+  S.dir = dir;
+  if ("Notification" in window && Notification.permission === "default") { try { await Notification.requestPermission(); } catch {} }
+  S.known.clear(); S.tempSeen.clear();
+  let n = 0;
+  for await (const [name, h] of dir.entries()) {
+    if (h.kind !== "file" || isTemp(name)) continue;
+    try { const f = await h.getFile(); S.known.set(name, { sig: f.size + ":" + f.lastModified, state: "baseline", sizes: [f.size] }); n++; } catch {}
+  }
+  S.baseline = n;
+  log("info", `开始监听「${dir.name}/」。已有 ${n} 个文件记为基线，不会触发。`);
+  log("dim", `输出写入 ${OUT_DIR}/ 子目录；监听只看顶层文件，所以自己的产物不会再次触发自己。`);
+  startWatching();
+  const notif = "Notification" in window && Notification.permission === "granted";
+  say(`<p>好了，我开始盯着 <code>${esc(dir.name)}/</code> 了。${n ? `里面原有的 ${n} 个文件我不会处理，` : ""}之后新存进来的录音，我会自动整理成纪要，放进 <code>${OUT_DIR}/</code>${notif ? "，并发桌面通知" : "（你没有允许桌面通知，我会在页面里提示）"}。</p><p>现在可以去忙别的了。想马上看效果，就往文件夹里存一段录音。</p>
+  ${note("开启时把已有文件记为基线、不回溯处理：用户说的是“出现新的录音时”，一开启就处理几十个历史文件会是一次意外的大动作。")}`);
+}
+function startWatching() {
+  S.watching = true;
+  clearInterval(S.timer); S.timer = setInterval(scan, POLL_MS);
+  let mode = "轮询 1s";
+  if (hasObserver && S.dir) {
+    try { S.observer = new FileSystemObserver(() => scan()); S.observer.observe(S.dir); mode = "FileSystemObserver + 轮询兜底"; }
+    catch (e) { log("dim", "FileSystemObserver 不可用，改用轮询：" + e.message); }
+  }
+  log("dim", "监听方式：" + mode);
+  renderCard(); renderFlow();
+}
+function stopWatching() {
+  S.watching = false; clearInterval(S.timer);
+  try { S.observer?.disconnect(); } catch {}
+  S.observer = null;
+}
+
+/* ================= 检测：新文件、等待写完 ================= */
+async function scan() {
+  if (!S.watching || !S.dir || S.scanning) return;
+  S.scanning = true;
+  try {
+    const present = new Set();
+    const settleTicks = Math.max(1, Number($("#settle").value) || 2) * 1000 / POLL_MS;
+    for await (const [name, h] of S.dir.entries()) {
+      if (h.kind !== "file") continue;
+      present.add(name);
+      if (isTemp(name)) {
+        if (!S.tempSeen.has(name)) { S.tempSeen.add(name); log("dim", `忽略临时文件 ${name}（写入中的交换文件）`); }
+        continue;
+      }
+      let f; try { f = await h.getFile(); } catch { continue; }
+      const sig = f.size + ":" + f.lastModified;
+      const k = S.known.get(name);
+      const fresh = () => {
+        const nk = { sig, state: "settling", stable: 0, sizes: [f.size], first: Date.now(), grew: false, handle: h };
+        nk.run = newRun(name, nk); S.known.set(name, nk);
+      };
+      if (!k) { log("info", `检测到新文件 ${name}（${fmtSize(f.size)}），等待写入完成…`); fresh(); continue; }
+      if (k.state === "settling") {
+        if (k.sig !== sig) {
+          k.sig = sig; k.stable = 0; k.sizes.push(f.size); k.grew = true;
+          log("warn", `${name} 仍在写入：${fmtSize(f.size)}，暂不处理`);
+          stage(k.run, "settle", "active", `还在写入：${k.sizes.map(fmtSize).join(" → ")}`);
+        } else if (++k.stable >= settleTicks) {
+          k.state = "queued"; k.handle = h;
+          log("info", `${name} 大小已连续 ${settleTicks * POLL_MS / 1000}s 不变，判定写入完成`);
+          S.queue = S.queue.then(() => processEvent(name, k)).catch(e => log("bad", "处理异常：" + e.message));
+        }
+      } else if (k.sig !== sig && ["baseline", "done", "skipped", "failed", "duplicate"].includes(k.state)) {
+        log("info", `${name} 被重新保存，重新进入检测`); fresh();
+      }
+    }
+    for (const [n, k] of [...S.known]) if (!present.has(n)) {
+      if (k.state === "settling" && k.run) { stage(k.run, "settle", "skip", "文件在写完前被移走"); k.run.state = "skipped"; k.run.reason = "文件在写完之前就被移走了"; renderRun(k.run); }
+      S.known.delete(n);
+    }
+    for (const n of [...S.tempSeen]) if (!present.has(n)) S.tempSeen.delete(n);
+  } catch (e) { log("bad", "扫描失败：" + e.message); }
+  finally { S.scanning = false; }
+}
+
+/* ================= 一次运行 ================= */
+const STAGES = [
+  ["detect", "发现文件"], ["settle", "等待写完"], ["type", "类型检查"], ["hash", "内容去重"],
+  ["payload", "Event Payload"], ["transcribe", "转写"], ["context", "组装 Context"], ["agent", "Agent 生成"], ["deliver", "交付"],
+];
+const PHASES = [["发现文件", ["detect", "settle", "type", "hash"]], ["读懂内容", ["payload", "transcribe", "context"]], ["生成纪要", ["agent"]], ["送到你手上", ["deliver"]]];
+const HUMAN = { detect: "发现了新文件", settle: "先确认文件已经写完", type: "看看是不是录音", hash: "看看以前处理过没有", payload: "记录这次事件", transcribe: "正在听录音", context: "挑出这次需要的内容", agent: "正在写纪要", deliver: "保存并通知你" };
+const ICON = { idle: "·", active: "▶", done: "✓", skip: "–", fail: "✕" };
+const STATE_BADGE = { waiting: ["等待写完", "live"], running: ["处理中", "live"], done: ["已送达", "ok"], failed: ["失败", "bad"], duplicate: ["重复 · 已跳过", "warn"], skipped: ["已跳过", "warn"] };
+
+function newRun(name, k) {
+  const run = { id: "run_" + uid(), name, state: k ? "waiting" : "running", startedAt: now(), stages: {}, log: [], attempts: [], tab: "payload", open: false, k };
+  for (const [key] of STAGES) run.stages[key] = { st: "idle", dt: "", ms: null };
+  run.stages.detect = { st: "done", dt: k ? `Watcher 在 ${hms()} 发现` : "拖拽回退模式收到文件", ms: 0 };
+  run.stages.settle = { st: k ? "active" : "done", dt: k ? "等待文件大小稳定" : "", ms: null, t0: performance.now() };
+  S.runs.unshift(run);
+  renderRun(run);
+  return run;
+}
+function stage(run, k, st, dt, ms) {
+  const s = run.stages[k]; if (st === "active" && s.st !== "active") s.t0 = performance.now();
+  s.st = st; if (dt !== undefined) s.dt = dt; if (ms !== undefined) s.ms = ms;
+  if ((st === "done" || st === "fail" || st === "skip") && s.t0 && ms === undefined) s.ms = Math.round(performance.now() - s.t0);
+  renderRun(run);
+}
+function phaseState(run, keys) {
+  const st = keys.map(k => run.stages[k].st);
+  if (st.includes("fail")) return "fail"; if (st.includes("skip")) return "skip";
+  if (st.every(s => s === "done")) return "done";
+  return st.includes("active") || st.includes("done") ? "active" : "idle";
+}
+function runSay(run) {
+  if (run.state === "done") return "";
+  if (run.state === "duplicate") return `<div class="run-say warn">这份内容和「${esc(run.dupOf)}」一模一样，我没有重复生成纪要。</div>${note("去重按文件内容的 SHA-256，不按文件名：同一段录音被改名、复制、被同步软件重新落盘，都不应该让用户收到第二份纪要。")}`;
+  if (run.state === "skipped") return `<div class="run-say warn">${esc(run.reason)}，我没有处理它，也不会发通知。</div>${note("不相关的文件静默跳过。自动化最容易被关掉的原因是打扰太多，所以只有“成功”和“需要你介入的失败”才值得一条通知。")}`;
+  if (run.state === "failed") return `<div class="run-say bad">这次没能生成纪要：${esc(run.error)}</div>
+    <div><button class="primary" data-act="resume" data-run="${run.id}">从断点继续</button> <span class="small">${run.transcript != null ? "转写结果已保留，只重跑失败的那一步。" : ""}</span></div>
+    ${note("失败要可恢复：重试有上限（3 次，1s / 2s 退避），鉴权类错误不重试；最终失败时保留已完成的步骤并明确告诉用户，而不是悄悄消失。")}`;
+  const act = STAGES.find(([k]) => run.stages[k].st === "active");
+  if (!act) return "";
+  const s = run.stages[act[0]];
+  return `<div class="run-say">${HUMAN[act[0]]}${s.dt ? `<span class="small"> · ${esc(s.dt)}</span>` : "…"}</div>`;
+}
+function minutesHtml(run) {
+  const m = run.minutes; if (!m) return "";
+  const secs = ((run.finishedAt - run.startedAt) / 1000).toFixed(1);
+  const offline = !/^Kimi/.test(m.by);
+  return `<div class="minutes">
+    <div class="m-title">会议纪要</div>
+    <p>${esc(m.summary)}</p>
+    <h4>关键决策</h4>${m.decisions.length ? "<ul>" + m.decisions.map(d => `<li>${esc(d)}</li>`).join("") + "</ul>" : `<p class="small">没有识别到明确的决策</p>`}
+    <h4>待办事项</h4><table><thead><tr><th>负责人</th><th>事项</th><th>截止</th></tr></thead><tbody>${m.action_items.length ? m.action_items.map(a => `<tr><td>${esc(a.owner)}</td><td>${esc(a.task)}</td><td>${esc(a.due)}</td></tr>`).join("") : "<tr><td colspan=3>没有识别到待办</td></tr>"}</tbody></table>
+    <div class="m-foot"><span>${run.output ? `已保存到 <code>${esc(run.output)}</code>` : "未写入文件"} · ${esc(m.by)}</span><button data-act="dl" data-run="${run.id}">下载 .md</button></div>
+  </div>
+  ${offline ? `<div class="small">这份纪要由离线规则生成，只为演示整条链路，质量不代表大模型。<a href="#" data-act="settings">接入 Kimi</a> 后由模型生成。</div>` : ""}
+  <div class="metrics">
+    <div class="metric"><b>${secs}s</b><span>从文件落盘到纪要送达</span></div>
+    <div class="metric"><b>0 次</b><span>你需要做的操作</span></div>
+    <div class="metric"><b>≈${run.context.tokens}</b><span>交给模型的 tokens</span></div>
+    <div class="metric"><b>${run.attempts.length} 次</b><span>自动重试</span></div>
+  </div>
+  ${note("结果卡片同时回答三个问题：结论是什么（纪要）、放在哪（文件路径）、凭什么信（生成方式、交给模型的内容可展开查看）。四个数字是这类自动化的核心指标：时延、人工步骤、成本、可靠性。")}`;
+}
+function techHtml(run) {
+  const steps = STAGES.map(([k, nm]) => { const s = run.stages[k]; return `<li class="${s.st}"><span class="ic">${ICON[s.st]}</span><span>${nm}</span><span class="dt">${esc(s.dt)}</span><span class="ms">${s.ms != null ? s.ms + "ms" : ""}</span></li>`; }).join("");
+  const TABS = [["payload", "Event Payload"], ["context", "交给模型的内容"], ["transcript", "转写原文"], ["runlog", "日志"]];
+  let body;
+  if (run.tab === "payload") body = `<pre>${esc(run.payload ? JSON.stringify(run.payload, null, 2) : "还没有生成 Event Payload。")}</pre>`;
+  else if (run.tab === "context") body = run.context ? `<div class="small" style="margin-top:8px">注入：${esc(run.context.included.join("、"))}<br>不注入：${esc(run.context.excluded.join("、"))}</div><pre>${esc(run.context.messages.map(m => `[${m.role}]\n${m.content}`).join("\n\n"))}</pre>` : `<pre>还没有组装 Context。</pre>`;
+  else if (run.tab === "transcript") body = `<pre>${esc(run.transcript ?? "还没有转写结果。")}</pre>`;
+  else body = `<pre>${esc(run.log.join("\n") + (run.attempts.length ? "\n\n重试记录：\n" + JSON.stringify(run.attempts, null, 2) : "") || "暂无")}</pre>`;
+  return `<details class="tech" ${run.open ? "open" : ""}><summary>查看 9 个步骤与技术细节</summary>
+    <ol class="steps">${steps}</ol>
+    <div class="tabs" role="tablist">${TABS.map(([k, t]) => `<button role="tab" class="${run.tab === k ? "on" : ""}" data-act="tab" data-run="${run.id}" data-t="${k}">${t}</button>`).join("")}</div>${body}</details>`;
+}
+function renderRun(run) {
+  const [t, c] = STATE_BADGE[run.state] || [run.state, ""];
+  const html = `<div class="run" data-run="${run.id}">
+    <div class="bub">
+      <div class="run-head"><span class="file">${esc(run.name)}</span><span class="badge ${c}">${t}</span></div>
+      <ol class="phases">${PHASES.map(([nm, keys]) => `<li class="${phaseState(run, keys)}">${nm}</li>`).join("")}</ol>
+      ${runSay(run)}${run.state === "done" ? minutesHtml(run) : ""}${techHtml(run)}
+    </div></div>`;
+  let el = document.getElementById(run.id);
+  if (el) el.querySelector(".bub").innerHTML = html; else el = say(html, { id: run.id });
+  return el;
+}
+
+async function processEvent(name, k, droppedFile) {
+  const run = k?.run || newRun(name, null);
+  S.current = run; run.state = "running";
+  stage(run, "settle", "done", k && k.grew ? `观察到 ${k.sizes.length - 1} 次增长（${k.sizes.map(fmtSize).join(" → ")}），稳定后才处理` : "大小没有变化，判定已写完", k ? Date.now() - k.first : 0);
+  log("info", `▶ 开始处理 ${name}`);
+  if (k && k.sizes.length > 2) pass("incomplete", `${name}：写入期间大小变化 ${k.sizes.length - 1} 次（${k.sizes.map(fmtSize).join(" → ")}），稳定 ${$("#settle").value}s 后才开始处理。`);
+
+  let file;
+  try { file = droppedFile || await k.handle.getFile(); }
+  catch (e) { return finishFail(run, k, "detect", "读取文件失败：" + e.message); }
+
+  stage(run, "type", "active");
+  const t = await sniff(file);
+  if (!t.ok) {
+    run.state = "skipped"; run.reason = `这不是我要处理的录音（${t.reason}）`; if (k) k.state = "skipped";
+    stage(run, "type", "skip", t.reason);
+    log("warn", `跳过 ${name}：${t.reason}`);
+    pass("wrongtype", `${name}：${t.reason}，已跳过，没有发通知。`);
+    S.current = null; return;
+  }
+  stage(run, "type", "done", `${t.kind === "audio" ? "音频" : "文字稿"} · ${t.mime} · ${fmtSize(file.size)}`);
+
+  stage(run, "hash", "active");
+  const buf = await file.arrayBuffer();
+  const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", buf))].map(x => x.toString(16).padStart(2, "0")).join("");
+  run.sha = sha;
+  if (S.seen.has(sha)) {
+    run.dupOf = S.seen.get(sha); run.state = "duplicate"; if (k) k.state = "duplicate";
+    stage(run, "hash", "skip", `sha256 ${sha.slice(0, 12)}… 与「${run.dupOf}」相同`);
+    log("warn", `重复事件：${name} 与 ${run.dupOf} 内容相同，已跳过`);
+    pass("dup", `${name} 的内容指纹与「${run.dupOf}」相同，没有生成第二份纪要。`);
+    S.current = null; return;
+  }
+  S.seen.set(sha, name); saveSeen();
+  stage(run, "hash", "done", `sha256 ${sha.slice(0, 12)}…（首次出现，已登记）`);
+
+  stage(run, "payload", "active");
+  run.payload = {
+    event_id: "evt_" + uid(), type: "file.created", source: droppedFile ? "web.drop_fallback" : "desktop.fs_watcher",
+    automation_id: S.automation.id,
+    file: { path: `${S.dir ? S.dir.name : "drop"}/${name}`, name, size: file.size, mime: t.mime, sha256: sha, last_modified: new Date(file.lastModified).toISOString() },
+    detected_at: new Date(k ? k.first : Date.now()).toISOString(), settled_at: new Date().toISOString(),
+  };
+  stage(run, "payload", "done", `${run.payload.event_id} · ${run.payload.type}`);
+  run.kind = t.kind; run.buf = buf; run.mime = t.mime;
+  await runFrom(run);
+}
+
+async function runFrom(run) {
+  S.current = run; run.state = "running"; renderRun(run);
+  try {
+    if (run.transcript == null) {
+      stage(run, "transcribe", "active", run.kind === "text" ? "读取文字稿" : "解码音频");
+      run.transcript = run.kind === "text" ? new TextDecoder().decode(run.buf) : await transcribe(run);
+      stage(run, "transcribe", "done", `${run.transcript.length} 字${run.kind === "audio" ? " · " + S.asrName.split("/")[1] : ""}`);
+    }
+    stage(run, "context", "active");
+    run.context = assemble(run);
+    stage(run, "context", "done", `约 ${run.context.tokens} tokens；只注入事件、Saved Prompt 和这份转写`);
+
+    stage(run, "agent", "active", key() ? `调用 Kimi ${$("#model").value}` : "离线规则生成");
+    run.minutes = await withRetry(run, () => key() ? kimiMinutes(run) : ruleMinutes(run.transcript));
+    stage(run, "agent", "done", `${run.minutes.decisions.length} 项决策 · ${run.minutes.action_items.length} 个待办${run.attempts.length ? ` · 重试 ${run.attempts.length} 次后成功` : ""}`);
+    if (run.attempts.length) pass("failure", `${run.name}：前 ${run.attempts.length} 次模型调用失败，按 1s / 2s 退避重试后成功，你没有被打扰。`);
+
+    stage(run, "deliver", "active");
+    const where = await deliver(run);
+    run.finishedAt = now(); run.state = "done"; if (run.k) run.k.state = "done";
+    stage(run, "deliver", "done", where);
+    log("ok", `✓ ${run.name} 处理完成`);
+    pass("normal", `${run.name}：从${run.payload.source === "desktop.fs_watcher" ? "真实文件写入" : "拖拽"}到送达共 ${((run.finishedAt - run.startedAt) / 1000).toFixed(1)}s。`);
+    document.getElementById(run.id)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  } catch (e) {
+    const st = Object.entries(run.stages).find(([, s]) => s.st === "active")?.[0] || "agent";
+    await finishFail(run, run.k, st, e.message);
+  }
+  S.current = null; renderFlow();
+}
+
+async function finishFail(run, k, st, msg) {
+  run.state = "failed"; run.error = msg; if (k) k.state = "failed"; run.checkpoint = st;
+  stage(run, st, "fail", msg);
+  log("bad", `✕ ${run.name} 失败于「${STAGES.find(s => s[0] === st)[1]}」：${msg}。状态已保存，可从断点重试。`);
+  await writeLog(run).catch(() => {});
+  notify("会议纪要生成失败", `${run.name}：${msg.slice(0, 60)}。打开页面可从断点继续。`, run, true);
+  if (run.attempts.length >= 3) pass("failure", `${run.name}：3 次调用都失败后停止重试，保留了转写和断点，并发出失败通知。`);
+  S.current = null;
+}
+
+function resume(run) {
+  if (!run || run.state !== "failed") return;
+  run.attempts = []; run.error = null;
+  for (const [k] of STAGES) if (run.stages[k].st === "fail") run.stages[k] = { st: "idle", dt: "", ms: null };
+  log("info", `从断点继续 ${run.name}（转写${run.transcript != null ? "已缓存，跳过" : "未完成，重新开始"}）`);
+  S.queue = S.queue.then(() => runFrom(run));
+}
+
+/* ================= 交付 ================= */
 async function deliver(run) {
   const parts = [];
   run.md = minutesMd(run);
@@ -866,151 +1020,129 @@ async function deliver(run) {
   parts.unshift(shown ? "桌面通知" : "页面提示");
   return parts.join(" + ");
 }
-
 function notify(title, body, run, bad = false) {
-  toast(`${title}｜${body}`, bad);
+  toast(title, body, bad);
   if ("Notification" in window && Notification.permission === "granted") {
     try {
       const n = new Notification(title, { body, tag: run.id });
-      n.onclick = () => { window.focus(); S.selected = run.id; renderAll(); n.close(); };
+      n.onclick = () => { window.focus(); document.getElementById(run.id)?.scrollIntoView({ behavior: "smooth" }); n.close(); };
       return true;
     } catch {}
   }
   return false;
 }
 
-/* ---------- 验证清单 ---------- */
+/* ================= 边界情况清单 ================= */
 function pass(k, ev) {
   const c = checks[k];
   if (!c.ev) { c.ev = ev; log("ok", `验证通过：${c.title}`); }
-  else if (k === "failure" && !c.ev.includes("\n") && /均失败/.test(ev) !== /均失败/.test(c.ev)) c.ev += "\n" + ev; // 重试成功、彻底失败两种结果都记下
+  else if (k === "failure" && !c.ev.includes("\n") && /都失败/.test(ev) !== /都失败/.test(c.ev)) c.ev += "\n" + ev;
   renderChecks();
 }
 function renderChecks() {
-  $("#checks").innerHTML = Object.values(checks).map(c => `<div class="check ${c.ev ? "pass" : ""}"><span class="ic">${c.ev ? "✓" : "○"}</span><div><b>${esc(c.title)}</b> · ${esc(c.desc)}<div class="ev">${c.ev ? esc(c.ev) : "尚未观察到"}</div></div></div>`).join("");
+  const list = Object.values(checks), n = list.filter(c => c.ev).length;
+  const off = !S.dir || !S.watching;
+  $("#checkCount").textContent = `已验证 ${n} / ${list.length}`;
+  $("#checkBar").style.width = (100 * n / list.length) + "%";
+  $("#checks").innerHTML = list.map(c => `<div class="case ${c.ev ? "pass" : ""}">
+    <div class="case-h"><span class="ic">${c.ev ? "✓" : "○"}</span><b>${esc(c.title)}</b></div>
+    <div class="ex">预期：${esc(c.expect)}</div>
+    ${c.ev ? `<div class="ev">${esc(c.ev)}</div>` : ""}
+    ${c.acts.length ? `<div class="acts">${c.acts.map(([a, t]) => `<button data-act="${a}" ${off ? "disabled" : ""}>${t}</button>`).join("")}</div>` : c.ev ? "" : `<div class="ex">完成第 3 步后自动打勾</div>`}
+  </div>`).join("") + (S.fallback ? `<div class="small">拖拽回退模式下无法演示这些情况，请用桌面版 Chrome 或 Edge。</div>` : "");
 }
 
-/* ---------- 执行记录与详情 ---------- */
-const STATE_BADGE = { running: ["处理中", "live"], done: ["完成", "ok"], failed: ["失败", "bad"], duplicate: ["重复·跳过", "warn"], skipped: ["类型不符·跳过", "warn"] };
-function renderRuns() {
-  const box = $("#runs");
-  if (!S.runs.length) return;
-  box.innerHTML = S.runs.map(r => {
-    const [t, c] = STATE_BADGE[r.state] || [r.state, ""];
-    return `<button class="run ${r.id === S.selected ? "sel" : ""}" data-id="${r.id}"><span class="nm">${esc(r.name)} <span class="small">${hms(r.startedAt)}</span></span><span class="badge ${c}">${t}</span></button>`;
-  }).join("");
-  box.querySelectorAll(".run").forEach(b => b.onclick = () => { S.selected = b.dataset.id; renderAll(); });
-  renderDetail();
-}
-const TABS = [["minutes", "纪要"], ["payload", "Event Payload"], ["context", "注入的 Context"], ["transcript", "转写"], ["runlog", "本次日志"]];
-function renderDetail() {
-  const run = S.runs.find(r => r.id === S.selected);
-  $("#detail").classList.toggle("hidden", !run);
-  if (!run) return;
-  $("#tabs").innerHTML = TABS.map(([k, t]) => `<button role="tab" class="${S.tab === k ? "on" : ""}" data-t="${k}">${t}</button>`).join("");
-  $("#tabs").querySelectorAll("button").forEach(b => b.onclick = () => { S.tab = b.dataset.t; renderDetail(); });
-  const body = $("#tabBody");
-  if (S.tab === "minutes") {
-    if (!run.minutes) { body.innerHTML = `<p class="small">${run.state === "failed" ? "生成失败：" + esc(run.error) : run.state === "running" ? "生成中…" : "本次事件被跳过，没有生成纪要。"}</p>`; return; }
-    const m = run.minutes;
-    body.innerHTML = `<div class="minutes">
-      <div class="small">生成方式：${esc(m.by)}${run.output ? " · 已写入 <code>" + esc(run.output) + "</code>" : ""}</div>
-      <h3>摘要</h3><p style="margin:0">${esc(m.summary)}</p>
-      <h3>关键决策</h3>${m.decisions.length ? "<ul>" + m.decisions.map(d => `<li>${esc(d)}</li>`).join("") + "</ul>" : "<p class='small'>无</p>"}
-      <h3>Action Items</h3><table><thead><tr><th>负责人</th><th>事项</th><th>截止</th></tr></thead><tbody>${m.action_items.length ? m.action_items.map(a => `<tr><td>${esc(a.owner)}</td><td>${esc(a.task)}</td><td>${esc(a.due)}</td></tr>`).join("") : "<tr><td colspan=3>无</td></tr>"}</tbody></table>
-      <div class="row"><button id="dlMd">下载纪要 .md</button></div></div>`;
-    $("#dlMd").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([run.md], { type: "text/markdown" })); a.download = run.name.replace(/\.[^.]+$/, "") + "-纪要.md"; a.click(); };
-  } else if (S.tab === "payload") {
-    body.innerHTML = `<pre>${esc(run.payload ? JSON.stringify(run.payload, null, 2) : "本次事件在生成 Payload 之前就被拦下：" + (Object.values(run.stages).find(s => s.st === "skip")?.dt || ""))}</pre>`;
-  } else if (S.tab === "context") {
-    body.innerHTML = run.context ? `<div class="small">注入：${esc(run.context.included.join("、"))}<br>不注入：${esc(run.context.excluded.join("、"))}</div><pre>${esc(run.context.messages.map(m => `[${m.role}]\n${m.content}`).join("\n\n"))}</pre>` : `<p class="small">还没有组装 Context。</p>`;
-  } else if (S.tab === "transcript") {
-    body.innerHTML = `<pre>${esc(run.transcript ?? "还没有转写结果。")}</pre>`;
-  } else {
-    body.innerHTML = `<pre>${esc(run.log.join("\n") + (run.attempts.length ? "\n\n重试记录：\n" + JSON.stringify(run.attempts, null, 2) : ""))}</pre>`;
-  }
-}
-function renderAll() {
-  renderRuns();
-  const run = S.runs.find(r => r.id === S.selected);
-  if (run) renderPipe(run);
-}
-
-/* ---------- 测试工具：往文件夹里做真实写入 ---------- */
+/* ================= 演示工具：往文件夹里做真实写入 ================= */
 async function sampleBytes() {
-  if (!S.lastSample) S.lastSample = await (await fetch("samples/sample-meeting.m4a")).arrayBuffer();
-  return S.lastSample;
+  if (!S.sample) S.sample = await (await fetch("samples/sample-meeting.m4a")).arrayBuffer();
+  return S.sample;
 }
-async function writeFile(name, data, { chunks = 1, gap = 0 } = {}) {
-  const fh = await S.dir.getFileHandle(name, { create: true });
-  const bytes = new Uint8Array(data);
-  const size = Math.ceil(bytes.length / chunks);
-  for (let i = 0; i < chunks; i++) {
-    const w = await fh.createWritable({ keepExistingData: i > 0 });
-    await w.seek(i * size); await w.write(bytes.slice(i * size, (i + 1) * size)); await w.close();
-    if (gap && i < chunks - 1) await sleep(gap);
-  }
-}
-const stamp = () => hms().replace(/:/g, "");
-function guard(fn) {
-  return async e => {
-    if (!S.dir) return;
-    const b = e.currentTarget; b.disabled = true;
-    try { await fn(); } catch (err) { log("bad", "写入失败：" + err.message); }
-    finally { b.disabled = false; }
-  };
-}
-$("#slowBtn").onclick = guard(async () => {
-  const name = `周会录音-${stamp()}.m4a`;
-  log("dim", `[测试工具] 开始分 6 段慢速写入 ${name}`);
-  await writeFile(name, await sampleBytes(), { chunks: 6, gap: 900 });
-  log("dim", `[测试工具] ${name} 写入结束`);
-});
-$("#txtBtn").onclick = guard(async () => {
-  const name = `周会转写-${stamp()}.txt`;
+async function freshText() {
   const t = await (await fetch("samples/sample-meeting.txt")).text();
-  await writeFile(name, new TextEncoder().encode(t + `\n（生成于 ${now().toLocaleString("zh-CN")}）`));
-  log("dim", `[测试工具] 已写入 ${name}`);
-});
-$("#dupBtn").onclick = guard(async () => {
-  const name = `周会录音-副本-${stamp()}.m4a`;
-  await writeFile(name, await sampleBytes());
-  log("dim", `[测试工具] 已写入 ${name}（与示例录音字节完全相同）`);
-});
-$("#badBtn").onclick = guard(async () => {
-  const name = `会议资料-${stamp()}.pdf`;
-  await writeFile(name, new TextEncoder().encode("%PDF-1.4 demo"));
-  log("dim", `[测试工具] 已写入 ${name}`);
-});
-$("#recBtn").onclick = async e => {
-  const b = e.currentTarget;
-  if (S.recorder) { S.recorder.stop(); return; }
-  let stream;
-  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
-  catch (err) { log("bad", "无法使用麦克风：" + err.message); return; }
-  const chunks = [];
-  const rec = new MediaRecorder(stream);
-  rec.ondataavailable = ev => chunks.push(ev.data);
-  rec.onstop = async () => {
-    stream.getTracks().forEach(t => t.stop()); S.recorder = null; b.textContent = "● 录一段音并保存";
-    const buf = await new Blob(chunks, { type: rec.mimeType }).arrayBuffer();
-    const name = `我的录音-${stamp()}.webm`;
-    try { await writeFile(name, buf, { chunks: 4, gap: 700 }); log("dim", `[测试工具] 录音已保存为 ${name}`); }
-    catch (err) { log("bad", "保存录音失败：" + err.message); }
-  };
-  rec.start(); S.recorder = rec; b.textContent = "■ 停止录音并保存";
-  log("dim", "[测试工具] 开始录音，说几句会议内容（比如“小王负责下周三前提交设计稿”）");
+  return new TextEncoder().encode(t + `\n（保存于 ${now().toLocaleString("zh-CN")} · ${uid()}）`);
+}
+async function tool(fn) {
+  if (!S.dir || !S.watching) { toast("还没有在监听文件夹", "先完成前两步。", true); return; }
+  try { await fn(); } catch (e) { log("bad", "写入失败：" + e.message); toast("写入失败", e.message, true); }
+}
+const ACT = {
+  enable, settings: () => $("#settings").showModal(),
+  edit: () => { $("#instr").value = S.automation?.instruction || ""; $("#instr").focus(); },
+  chip: b => { $("#instr").value = b.dataset.text; $("#instr").focus(); },
+  notes: b => { const off = document.body.classList.toggle("notes-off"); b.textContent = "设计说明：" + (off ? "关" : "开"); b.setAttribute("aria-pressed", String(!off)); },
+  pause: () => { if (S.watching) { stopWatching(); log("info", "已暂停监听"); renderCard(); renderFlow(); } else if (S.dir) { log("info", "继续监听"); startWatching(); } },
+  resume: b => resume(S.runs.find(r => r.id === b.dataset.run)),
+  tab: b => { const r = S.runs.find(r => r.id === b.dataset.run); if (r) { r.tab = b.dataset.t; r.open = true; renderRun(r); } },
+  dl: b => { const r = S.runs.find(r => r.id === b.dataset.run); if (!r?.md) return; const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([r.md], { type: "text/markdown" })); a.download = r.name.replace(/\.[^.]+$/, "") + "-纪要.md"; a.click(); },
+  clearSeen: () => { S.seen.clear(); saveSeen(); log("info", "已清空去重记录（相同内容会被重新处理）"); toast("去重记录已清空"); },
+  sample: () => tool(async () => {
+    const name = `周会录音-${stamp()}.m4a`;
+    log("dim", `[演示工具] 分 4 段写入 ${name}，模拟录音软件逐步落盘`);
+    await writeFile(name, await sampleBytes(), { chunks: 4, gap: 700 });
+  }),
+  txt: () => tool(async () => { const name = `周会转写-${stamp()}.txt`; await writeFile(name, await freshText()); log("dim", `[演示工具] 已写入 ${name}`); }),
+  slow: () => tool(async () => {
+    const name = `慢速写入-${stamp()}.txt`;
+    log("dim", `[演示工具] 分 6 段、约 5 秒写完 ${name}`);
+    await writeFile(name, await freshText(), { chunks: 6, gap: 900 });
+  }),
+  dup: () => tool(async () => {
+    const src = S.runs.find(r => r.state === "done" && r.buf);
+    if (!src) { toast("还没有可以重复的内容", "先让一段录音或文字稿跑通一次。", true); return; }
+    const ext = (src.name.match(/\.[^.]+$/) || [".txt"])[0];
+    const name = `${src.name.replace(/\.[^.]+$/, "")}-副本-${stamp()}${ext}`;
+    await writeFile(name, src.buf); log("dim", `[演示工具] 已写入 ${name}（与 ${src.name} 字节完全相同）`);
+  }),
+  pdf: () => tool(async () => { const name = `会议资料-${stamp()}.pdf`; await writeFile(name, new TextEncoder().encode("%PDF-1.4 demo")); log("dim", `[演示工具] 已写入 ${name}`); }),
+  fail2: () => failWith(2), fail3: () => failWith(3),
+  testKey,
+  rec: async b => {
+    if (S.recorder) { S.recorder.stop(); return; }
+    if (!S.dir || !S.watching) return;
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+    catch (err) { toast("无法使用麦克风", err.message, true); return; }
+    const chunks = [], rec = new MediaRecorder(stream);
+    rec.ondataavailable = ev => chunks.push(ev.data);
+    rec.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop()); S.recorder = null; b.textContent = "● 自己录一段再存入";
+      const buf = await new Blob(chunks, { type: rec.mimeType }).arrayBuffer();
+      const name = `我的录音-${stamp()}.webm`;
+      try { await writeFile(name, buf, { chunks: 4, gap: 700 }); log("dim", `[演示工具] 录音已保存为 ${name}`); }
+      catch (err) { log("bad", "保存录音失败：" + err.message); }
+    };
+    rec.start(); S.recorder = rec; b.textContent = "■ 停止并存入文件夹";
+    toast("正在录音", "说几句会议内容，比如“小王负责下周三前提交设计稿”。");
+  },
 };
+function failWith(n) {
+  return tool(async () => {
+    $("#failN").value = n;
+    const name = `故障演练-${stamp()}.txt`;
+    log("dim", `[演示工具] 接下来 ${n} 次模型调用会被强制失败；写入 ${name}`);
+    await writeFile(name, await freshText());
+  });
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b || b.disabled) return;
+  if (b.tagName === "A") e.preventDefault();
+  ACT[b.dataset.act]?.(b);
+});
+$("#thread").addEventListener("toggle", e => {
+  const id = e.target.closest?.("[data-run]")?.dataset.run; const r = S.runs.find(r => r.id === id);
+  if (r && e.target.classList.contains("tech")) r.open = e.target.open;
+}, true);
+$("#composer").addEventListener("submit", e => { e.preventDefault(); send(); });
+$("#instr").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
+$("#key").addEventListener("input", () => { renderFlow(); renderCard(); });
+$("#model").addEventListener("change", renderFlow);
 
-/* ---------- 回退模式：拖拽 ---------- */
+/* ================= 回退模式：拖拽 ================= */
 function enableFallback() {
   S.fallback = true; S.watching = true;
-  $("#dropZone").classList.remove("hidden");
-  $("#modeBadge").textContent = "拖拽回退模式"; $("#modeBadge").className = "badge warn";
-  $("#watchDot").className = "dot on"; $("#watchText").textContent = "回退模式：把文件拖到下面的框里。";
-  $("#cardBadge").textContent = "回退模式"; $("#cardBadge").className = "badge warn";
-  $("#cardPath").textContent = "拖拽回退模式";
   log("warn", "浏览器不支持读写本地文件夹，进入拖拽回退模式（不能验证真实文件写入）");
+  renderCard(); renderFlow();
+  say(`<p>这个浏览器不让网页监听本地文件夹，所以先用拖拽代替：把录音或 .txt 拖到右边的框里。要体验真实的文件触发，请用电脑上的 Chrome 或 Edge 打开。</p>`);
 }
 const dz = $("#dropZone");
 dz.ondragover = e => { e.preventDefault(); dz.classList.add("over"); };
@@ -1023,27 +1155,25 @@ dz.ondrop = e => {
   }
 };
 
-/* ---------- 其他 ---------- */
-$("#testKey").onclick = async () => {
-  if (!key()) { toast("先填 Kimi API Key", true); return; }
+async function testKey() {
+  if (!key()) { toast("先填 Kimi API Key", "", true); return; }
   try {
     const r = await fetch(`${$("#base").value}/models`, { headers: { Authorization: `Bearer ${key()}` } });
     if (!r.ok) throw new Error(`${r.status} ${(await r.text()).slice(0, 80)}`);
     const ids = ((await r.json()).data || []).map(m => m.id).sort();
-    if (ids.length) {
-      const cur = $("#model").value;
-      $("#model").innerHTML = ids.map(i => `<option ${i === cur ? "selected" : ""}>${esc(i)}</option>`).join("");
-    }
-    toast(`连接成功，可用模型 ${ids.length} 个`); log("ok", `Kimi 连接成功，读取到 ${ids.length} 个模型`);
-  } catch (e) { toast("连接失败：" + e.message, true); log("bad", "Kimi 连接失败：" + e.message); }
-};
-$("#clearSeen").onclick = () => { S.seen.clear(); saveSeen(); log("info", "已清空去重记录（相同内容会被重新处理）"); };
+    if (ids.length) { const cur = $("#model").value; $("#model").innerHTML = ids.map(i => `<option ${i === cur ? "selected" : ""}>${esc(i)}</option>`).join(""); }
+    toast("连接成功", `可用模型 ${ids.length} 个`); log("ok", `Kimi 连接成功，读取到 ${ids.length} 个模型`); renderFlow();
+  } catch (e) { toast("连接失败", e.message, true); log("bad", "Kimi 连接失败：" + e.message); }
+}
 
-renderSupport();
-renderChecks();
-document.querySelectorAll("[data-need-dir]").forEach(b => b.disabled = true);
-$("#pipe").innerHTML = STAGES.map(([, nm]) => `<li class="idle"><span class="ic">·</span><span class="nm">${nm}</span><span class="dt"></span><span class="ms"></span></li>`).join("");
-log("dim", "Demo 已加载。先生成 Automation Card，再确认并选择一个文件夹。");
+/* ================= 启动 ================= */
+if (!hasFS) {
+  $("#support").classList.remove("hidden");
+  $("#support").textContent = "当前浏览器不支持监听本地文件夹（Safari、Firefox、手机浏览器都不支持）。要体验真实的文件触发，请用电脑上的 Chrome 或 Edge 打开；这里只能用拖拽代替。";
+}
+say(`<p>你好，我是 Kimi。你可以告诉我：<b>当什么事情发生时，自动帮你做什么</b>。说一次就行，以后我会一直照做。</p>`);
+renderFlow();
+log("dim", `Demo 已加载。${hasFS ? (hasObserver ? "支持 FileSystemObserver。" : "用 1 秒轮询检测文件变化。") : "不支持本地文件夹，使用拖拽回退。"}`);
 </script>
 </body>
 </html>
