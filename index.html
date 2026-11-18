@@ -271,6 +271,7 @@ dialog form { display: grid; gap: 12px; }
         <p id="coachText"></p>
         <div id="tools" class="stack">
           <button class="primary" data-act="sample" data-need-dir>存入示例录音<small>50 秒 · 两人对话</small></button>
+          <button data-act="talk" data-need-dir>存入一段讲话录音<small>2 分钟 · 单人分享</small></button>
           <button data-act="txt" data-need-dir>存入一份文字稿<small>不用转写 · 1 秒出结果</small></button>
           <button data-act="rec" id="recBtn" data-need-dir>● 自己录一段再存入</button>
           <a class="btn" href="samples/sample-meeting.m4a" download>下载示例录音，自己拖进文件夹</a>
@@ -532,7 +533,7 @@ async function ruleMinutes(t) {
     const s = strip(raw);
     if (s.replace(/[。！？!?，,\s]/g, "").length <= 3) continue;
     if (/决定|決定|确定|確定|同意|定为|定為|结论|結論/.test(s)) { decisions.push(s); continue; }
-    if (/负责|負責|跟进|跟進|提交|整理|准备|準備|待办|TODO|我来|我來/i.test(s) && !/已经|已經|过了|過了/.test(s)) {
+    if (/负责|負責|跟进|跟進|提交|整理|准备|準備|待办|TODO|我来|我來/i.test(s) && !/已经|已經|过了|過了|大家好|谢谢|謝謝|讲一讲|講一講/.test(s)) {
       let owner = (s.match(/(小[一-龥]|[一-龥]{2,3})(?=负责|負責)/) || [])[1];
       if (!owner && /^我来|^我來|^我/.test(s)) owner = lastSpeaker || "发言人";
       const due = (s.match(/(下周[一二三四五六日天]|下週[一二三四五六日天]|周[一二三四五六日天]|週[一二三四五六日天]|明天|后天|後天|今天|\d+月\d+[日号])/) || [])[1] || "未提及";
@@ -1079,6 +1080,11 @@ const ACT = {
     const name = `周会录音-${stamp()}.m4a`;
     log("dim", `[演示工具] 分 4 段写入 ${name}，模拟录音软件逐步落盘`);
     await writeFile(name, await sampleBytes(), { chunks: 4, gap: 700 });
+  }),
+  talk: () => tool(async () => {
+    const name = `分享会录音-${stamp()}.m4a`;
+    log("dim", `[演示工具] 分 6 段写入 ${name}（2 分钟讲话）`);
+    await writeFile(name, await (await fetch("samples/google-talk.m4a")).arrayBuffer(), { chunks: 6, gap: 600 });
   }),
   txt: () => tool(async () => { const name = `周会转写-${stamp()}.txt`; await writeFile(name, await freshText()); log("dim", `[演示工具] 已写入 ${name}`); }),
   slow: () => tool(async () => {
